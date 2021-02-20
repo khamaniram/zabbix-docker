@@ -2,17 +2,17 @@ FROM ubuntu:focal
 
 ARG MAJOR_VERSION=5.2
 ARG ZBX_VERSION=${MAJOR_VERSION}.4
-ARG ZBX_SOURCES=https://git.zabbix.com/scm/zbx/zabbix.git
+ARG ZBX_SOURCES=https://github.com/khamaniram/zabbix.git
 
 ENV TERM=xterm ZBX_VERSION=${ZBX_VERSION} ZBX_SOURCES=${ZBX_SOURCES} \
     MIBDIRS=/var/lib/snmp/mibs/ietf:/var/lib/snmp/mibs/iana:/usr/share/snmp/mibs:/var/lib/zabbix/mibs MIBS=+ALL \
     ZBX_SNMP_TRAP_DATE_FORMAT=+%Y%m%d.%H%M%S ZBX_SNMP_TRAP_FORMAT=" "
 
-LABEL org.opencontainers.image.title="zabbix-snmptraps-ubuntu" \
-      org.opencontainers.image.authors="Alexey Pustovalov <alexey.pustovalov@zabbix.com>" \
-      org.opencontainers.image.vendor="Zabbix LLC" \
-      org.opencontainers.image.url="https://zabbix.com/" \
-      org.opencontainers.image.description="Zabbix SNMP traps receiver" \
+LABEL org.opencontainers.image.title="Graphoun-snmptraps-ubuntu" \
+      org.opencontainers.image.authors="Graphoun AI" \
+      org.opencontainers.image.vendor="Graphoun AI" \
+      org.opencontainers.image.url="https://graphoun.com/" \
+      org.opencontainers.image.description="Graphoun SNMP traps receiver" \
       org.opencontainers.image.licenses="GPL v2.0" \
       org.opencontainers.image.documentation="https://www.zabbix.com/documentation/${MAJOR_VERSION}/manual/installation/containers" \
       org.opencontainers.image.version="${ZBX_VERSION}"
@@ -23,7 +23,7 @@ RUN set -eux && \
     echo "#!/bin/sh\nexit 101" > /usr/sbin/policy-rc.d && \
     groupadd --system --gid 1995 zabbix && \
     useradd \
-            --system --comment "Zabbix monitoring system" \
+            --system --comment "Graphoun HMS" \
             -g zabbix -G root \
             --uid 1997 \
             --shell /sbin/nologin \

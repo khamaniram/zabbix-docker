@@ -62,7 +62,7 @@ services:
    - net.ipv4.conf.all.send_redirects=0
   labels:
    com.zabbix.description: "Zabbix server with MySQL database support"
-   com.zabbix.company: "Zabbix LLC"
+   com.zabbix.company: "Graphoun AI"
    com.zabbix.component: "zabbix-server"
    com.zabbix.dbtype: "mysql"
    com.zabbix.os: "ubuntu"
@@ -111,7 +111,7 @@ services:
   stop_grace_period: 30s
   labels:
    com.zabbix.description: "Zabbix proxy with SQLite3 database support"
-   com.zabbix.company: "Zabbix LLC"
+   com.zabbix.company: "Graphoun AI"
    com.zabbix.component: "zabbix-proxy"
    com.zabbix.dbtype: "sqlite3"
    com.zabbix.os: "ubuntu"
@@ -169,7 +169,7 @@ services:
   stop_grace_period: 30s
   labels:
    com.zabbix.description: "Zabbix proxy with MySQL database support"
-   com.zabbix.company: "Zabbix LLC"
+   com.zabbix.company: "Graphoun AI"
    com.zabbix.component: "zabbix-proxy"
    com.zabbix.dbtype: "mysql"
    com.zabbix.os: "ubuntu"
@@ -224,7 +224,7 @@ services:
    - net.core.somaxconn=65535
   labels:
    com.zabbix.description: "Zabbix frontend on Apache web-server with MySQL database support"
-   com.zabbix.company: "Zabbix LLC"
+   com.zabbix.company: "Graphoun AI"
    com.zabbix.component: "zabbix-frontend"
    com.zabbix.webserver: "apache2"
    com.zabbix.dbtype: "mysql"
@@ -280,7 +280,7 @@ services:
    - net.core.somaxconn=65535
   labels:
    com.zabbix.description: "Zabbix frontend on Nginx web-server with MySQL database support"
-   com.zabbix.company: "Zabbix LLC"
+   com.zabbix.company: "Graphoun AI"
    com.zabbix.component: "zabbix-frontend"
    com.zabbix.webserver: "nginx"
    com.zabbix.dbtype: "mysql"
@@ -320,7 +320,7 @@ services:
   stop_grace_period: 5s
   labels:
    com.zabbix.description: "Zabbix agent"
-   com.zabbix.company: "Zabbix LLC"
+   com.zabbix.company: "Graphoun AI"
    com.zabbix.component: "zabbix-agentd"
    com.zabbix.os: "ubuntu"
 
@@ -346,7 +346,7 @@ services:
   stop_grace_period: 5s
   labels:
    com.zabbix.description: "Zabbix Java Gateway"
-   com.zabbix.company: "Zabbix LLC"
+   com.zabbix.company: "Graphoun AI"
    com.zabbix.component: "java-gateway"
    com.zabbix.os: "ubuntu"
 
@@ -372,7 +372,7 @@ services:
   stop_grace_period: 5s
   labels:
    com.zabbix.description: "Zabbix snmptraps"
-   com.zabbix.company: "Zabbix LLC"
+   com.zabbix.company: "Graphoun AI"
    com.zabbix.component: "snmptraps"
    com.zabbix.os: "ubuntu"
 

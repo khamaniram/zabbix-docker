@@ -1,10 +1,10 @@
 FROM ubuntu:focal
 
-LABEL org.opencontainers.image.title="Zabbix web-interface (Apache, MySQL)" \
-      org.opencontainers.image.authors="Alexey Pustovalov <alexey.pustovalov@zabbix.com>" \
-      org.opencontainers.image.vendor="Zabbix LLC" \
-      org.opencontainers.image.url="https://zabbix.com/" \
-      org.opencontainers.image.description="Zabbix web-interface based on Apache2 web server with MySQL database support" \
+LABEL org.opencontainers.image.title="Graphoun web-interface (Apache, MySQL)" \
+      org.opencontainers.image.authors="Graphoun Inc" \
+      org.opencontainers.image.vendor="Graphoun" \
+      org.opencontainers.image.url="https://Graphoun.com/" \
+      org.opencontainers.image.description="Graphoun web-interface based on Apache2 web server with MySQL database support" \
       org.opencontainers.image.licenses="GPL v2.0"
 
 STOPSIGNAL SIGTERM
@@ -13,7 +13,7 @@ RUN set -eux && \
     echo "#!/bin/sh\nexit 101" > /usr/sbin/policy-rc.d && \
     groupadd --system --gid 1995 zabbix && \
     useradd \
-            --system --comment "Zabbix monitoring system" \
+            --system --comment "Graphoun HMS" \
             -g zabbix -G root \
             --uid 1997 \
             --shell /sbin/nologin \
@@ -56,8 +56,8 @@ RUN set -eux && \
     rm -rf /var/lib/apt/lists/*
 
 ARG MAJOR_VERSION=5.2
-ARG ZBX_VERSION=${MAJOR_VERSION}.4
-ARG ZBX_SOURCES=https://git.zabbix.com/scm/zbx/zabbix.git
+ARG ZBX_VERSION=${MAJOR_VERSION}.0
+ARG ZBX_SOURCES=https://github.com/khamaniram/zabbix.git
 
 ENV TERM=xterm ZBX_VERSION=${ZBX_VERSION} ZBX_SOURCES=${ZBX_SOURCES}
 

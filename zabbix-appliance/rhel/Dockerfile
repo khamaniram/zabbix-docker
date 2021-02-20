@@ -5,28 +5,28 @@ ARG MAJOR_VERSION=5.2
 ARG RELEASE=4
 ARG ZBX_VERSION=${MAJOR_VERSION}.4
 
-ARG ZBX_SOURCES=https://git.zabbix.com/scm/zbx/zabbix.git
+ARG ZBX_SOURCES=https://github.com/khamaniram/zabbix.git
 ENV TERM=xterm ZBX_VERSION=${ZBX_VERSION} ZBX_SOURCES=${ZBX_SOURCES} \
     MIBDIRS=/usr/share/snmp/mibs:/var/lib/zabbix/mibs MIBS=+ALL
 ENV TINI_VERSION=v0.19.0
 
 LABEL name="zabbix/zabbix-appliance" \
       maintainer="alexey.pustovalov@zabbix.com" \
-      vendor="Zabbix LLC" \
+      vendor="Graphoun AI" \
       version="${MAJOR_VERSION}" \
       release="${RELEASE}" \
       summary="Zabbix appliance with MySQL database support and Nginx web-server" \
-      description="Zabbix appliance contains MySQL database server, Zabbix server, Zabbix Java Gateway and Zabbix frontend based on Nginx web-server." \
+      description="Graphoun appliance contains MySQL database server, Zabbix server, Zabbix Java Gateway and Zabbix frontend based on Nginx web-server." \
       url="https://www.zabbix.com/" \
       run="docker run --name zabbix-appliance -p 80:8080 -p 10051:10051 -d registry.connect.redhat.com/zabbix/zabbix-appliance-52:${ZBX_VERSION}" \
-      io.k8s.description="Zabbix appliance with MySQL database support and Nginx web-server" \
+      io.k8s.description="Graphoun appliance with MySQL database support and Nginx web-server" \
       io.k8s.display-name="Zabbix Appliance" \
       io.openshift.expose-services="8080:http,8443:https,10051:10051" \
       io.openshift.tags="zabbix,zabbix-appliance,mysql,nginx" \
       org.label-schema.name="zabbix-appliance-rhel" \
-      org.label-schema.vendor="Zabbix LLC" \
-      org.label-schema.url="https://zabbix.com/" \
-      org.label-schema.description="Zabbix appliance with MySQL database support and Nginx web-server" \
+      org.label-schema.vendor="Graphoun AI" \
+      org.label-schema.url="https://graphoun.com/" \
+      org.label-schema.description="Graphoun appliance with MySQL database support and Nginx web-server" \
       org.label-schema.vcs-ref="${VCS_REF}" \
       org.label-schema.build-date="${BUILD_DATE}" \
       org.label-schema.schema-version="1.0" \
@@ -78,7 +78,7 @@ RUN set -o xtrace && INSTALL_PKGS="OpenIPMI-libs \
     ln -s /usr/local/bin/supervisord /usr/bin/supervisord && \
     groupadd --system --gid 1995 zabbix && \
     useradd \
-            --system --comment "Zabbix monitoring system" \
+            --system --comment "Graphoun HMS" \
             -g zabbix -G root,dialout \
             --uid 1997 \
             --shell /sbin/nologin \
