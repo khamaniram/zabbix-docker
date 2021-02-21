@@ -17,9 +17,6 @@ fi
 # Default Zabbix server port number
 : ${ZBX_SERVER_PORT:="10051"}
 
-# Default timezone for web interface
-: ${PHP_TZ:="Europe/Riga"}
-
 # Default directories
 # Configuration files directory
 ZABBIX_ETC_DIR="/etc/zabbix"
@@ -103,10 +100,17 @@ check_db_connect() {
     fi
 
     WAIT_TIMEOUT=5
-    
+
     if [ -n "${DB_SERVER_SCHEMA}" ]; then
         PGOPTIONS="--search_path=${DB_SERVER_SCHEMA}"
         export PGOPTIONS
+    fi
+
+    if [ -n "${ZBX_DBTLSCONNECT}" ]; then
+        export PGSSLMODE=${ZBX_DBTLSCONNECT//_/-}
+        export PGSSLROOTCERT=${ZBX_DBTLSCAFILE}
+        export PGSSLCERT=${ZBX_DBTLSCERTFILE}
+        export PGSSLKEY=${ZBX_DBTLSKEYFILE}
     fi
 
     while [ ! "$(psql --host ${DB_SERVER_HOST} --port ${DB_SERVER_PORT} --username ${DB_SERVER_ROOT_USER} --dbname ${DB_SERVER_DBNAME} --list --quiet 2>/dev/null)" ]; do
@@ -116,6 +120,10 @@ check_db_connect() {
 
     unset PGPASSWORD
     unset PGOPTIONS
+    unset PGSSLMODE
+    unset PGSSLROOTCERT
+    unset PGSSLCERT
+    unset PGSSLKEY
 }
 
 prepare_web_server() {
@@ -152,7 +160,7 @@ prepare_zbx_web_config() {
     export ZBX_POSTMAXSIZE=${ZBX_POSTMAXSIZE:-"16M"}
     export ZBX_UPLOADMAXFILESIZE=${ZBX_UPLOADMAXFILESIZE:-"2M"}
     export ZBX_MAXINPUTTIME=${ZBX_MAXINPUTTIME:-"300"}
-    export PHP_TZ=${PHP_TZ:-"Europe/Riga"}
+    export PHP_TZ=${PHP_TZ}
 
     export DB_SERVER_TYPE="POSTGRESQL"
     export DB_SERVER_HOST=${DB_SERVER_HOST}
@@ -164,6 +172,29 @@ prepare_zbx_web_config() {
     export ZBX_SERVER_HOST=${ZBX_SERVER_HOST}
     export ZBX_SERVER_PORT=${ZBX_SERVER_PORT:-"10051"}
     export ZBX_SERVER_NAME=${ZBX_SERVER_NAME}
+
+    export ZBX_DB_ENCRYPTION=${ZBX_DB_ENCRYPTION:-"false"}
+    export ZBX_DB_KEY_FILE=${ZBX_DB_KEY_FILE}
+    export ZBX_DB_CERT_FILE=${ZBX_DB_CERT_FILE}
+    export ZBX_DB_CA_FILE=${ZBX_DB_CA_FILE}
+    export ZBX_DB_VERIFY_HOST=${ZBX_DB_VERIFY_HOST-"false"}
+
+    export ZBX_VAULTURL=${ZBX_VAULTURL}
+    export ZBX_VAULTDBPATH=${ZBX_VAULTDBPATH}
+    export VAULT_TOKEN=${VAULT_TOKEN}
+
+    export DB_DOUBLE_IEEE754=${DB_DOUBLE_IEEE754:-"true"}
+
+    export ZBX_HISTORYSTORAGEURL=${ZBX_HISTORYSTORAGEURL}
+    export ZBX_HISTORYSTORAGETYPES=${ZBX_HISTORYSTORAGETYPES:-"[]"}
+
+    export ZBX_SSO_SETTINGS=${ZBX_SSO_SETTINGS:-""}
+
+    if [ -n "${ZBX_SESSION_NAME}" ]; then
+        cp "$ZABBIX_WWW_ROOT/include/defines.inc.php" "/tmp/defines.inc.php_tmp"
+        sed "/ZBX_SESSION_NAME/s/'[^']*'/'${ZBX_SESSION_NAME}'/2" "/tmp/defines.inc.php_tmp" > "$ZABBIX_WWW_ROOT/include/defines.inc.php"
+        rm -f "/tmp/defines.inc.php_tmp"
+    fi
 
     if [ "${ENABLE_WEB_ACCESS_LOG:-"true"}" == "false" ]; then
         sed -ri \

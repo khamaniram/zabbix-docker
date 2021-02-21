@@ -172,6 +172,32 @@ check_variables_mysql() {
     DB_SERVER_DBNAME=${MYSQL_DATABASE:-"zabbix"}
 }
 
+db_tls_params() {
+    local result=""
+
+    if [ -n "${ZBX_DBTLSCONNECT}" ]; then
+        result="--ssl"
+
+        if [ "${ZBX_DBTLSCONNECT}" != "required" ]; then
+            result="${result} --ssl-verify-server-cert"
+        fi
+
+        if [ -n "${ZBX_DBTLSCAFILE}" ]; then
+            result="${result} --ssl-ca=${ZBX_DBTLSCAFILE}"
+        fi
+
+        if [ -n "${ZBX_DBTLSKEYFILE}" ]; then
+            result="${result} --ssl-key=${ZBX_DBTLSKEYFILE}"
+        fi
+
+        if [ -n "${ZBX_DBTLSCERTFILE}" ]; then
+            result="${result} --ssl-cert=${ZBX_DBTLSCERTFILE}"
+        fi
+    fi
+
+    echo $result
+}
+
 check_db_connect_mysql() {
     echo "********************"
     echo "* DB_SERVER_HOST: ${DB_SERVER_HOST}"
@@ -189,10 +215,12 @@ check_db_connect_mysql() {
 
     WAIT_TIMEOUT=5
 
+    ssl_opts="$(db_tls_params)"
+
     export MYSQL_PWD="${DB_SERVER_ROOT_PASS}"
 
     while [ ! "$(mysqladmin ping -h ${DB_SERVER_HOST} -P ${DB_SERVER_PORT} -u ${DB_SERVER_ROOT_USER} \
-                --silent --connect_timeout=10)" ]; do
+                --silent --connect_timeout=10 $ssl_opts)" ]; do
         echo "**** MySQL server is not available. Waiting $WAIT_TIMEOUT seconds..."
         sleep $WAIT_TIMEOUT
     done
@@ -204,10 +232,12 @@ mysql_query() {
     query=$1
     local result=""
 
+    ssl_opts="$(db_tls_params)"
+
     export MYSQL_PWD="${DB_SERVER_ROOT_PASS}"
 
     result=$(mysql --silent --skip-column-names -h ${DB_SERVER_HOST} -P ${DB_SERVER_PORT} \
-             -u ${DB_SERVER_ROOT_USER} -e "$query")
+             -u ${DB_SERVER_ROOT_USER} -e "$query" $ssl_opts)
 
     unset MYSQL_PWD
 
@@ -254,11 +284,13 @@ create_db_schema_mysql() {
     if [ -z "${ZBX_DB_VERSION}" ]; then
         echo "** Creating '${DB_SERVER_DBNAME}' schema in MySQL"
 
+        ssl_opts="$(db_tls_params)"
+
         export MYSQL_PWD="${DB_SERVER_ROOT_PASS}"
 
         zcat /usr/share/doc/zabbix-server-mysql/create.sql.gz | mysql --silent --skip-column-names \
                     -h ${DB_SERVER_HOST} -P ${DB_SERVER_PORT} \
-                    -u ${DB_SERVER_ROOT_USER}  \
+                    -u ${DB_SERVER_ROOT_USER} $ssl_opts  \
                     ${DB_SERVER_DBNAME} 1>/dev/null
 
         unset MYSQL_PWD
@@ -270,6 +302,7 @@ update_zbx_config() {
 
     ZBX_CONFIG=$ZABBIX_ETC_DIR/zabbix_server.conf
 
+    update_config_var $ZBX_CONFIG "ListenIP" "${ZBX_LISTENIP}"
     update_config_var $ZBX_CONFIG "ListenPort" "${ZBX_LISTENPORT}"
 
     update_config_var $ZBX_CONFIG "SourceIP" "${ZBX_SOURCEIP}"
@@ -280,14 +313,39 @@ update_zbx_config() {
 
     update_config_var $ZBX_CONFIG "DebugLevel" "${ZBX_DEBUGLEVEL}"
 
+    if [ -n "${ZBX_DBTLSCONNECT}" ]; then
+        update_config_var $ZBX_CONFIG "DBTLSConnect" "${ZBX_DBTLSCONNECT}"
+        update_config_var $ZBX_CONFIG "DBTLSCAFile" "${ZBX_DBTLSCAFILE}"
+        update_config_var $ZBX_CONFIG "DBTLSCertFile" "${ZBX_DBTLSCERTFILE}"
+        update_config_var $ZBX_CONFIG "DBTLSKeyFile" "${ZBX_DBTLSKEYFILE}"
+        update_config_var $ZBX_CONFIG "DBTLSCipher" "${ZBX_DBTLSCIPHER}"
+        update_config_var $ZBX_CONFIG "DBTLSCipher13" "${ZBX_DBTLSCIPHER13}"
+    fi
+
     update_config_var $ZBX_CONFIG "DBHost" "${DB_SERVER_HOST}"
     update_config_var $ZBX_CONFIG "DBName" "${DB_SERVER_DBNAME}"
     update_config_var $ZBX_CONFIG "DBSchema" "${DB_SERVER_SCHEMA}"
-    update_config_var $ZBX_CONFIG "DBUser" "${DB_SERVER_ZBX_USER}"
     update_config_var $ZBX_CONFIG "DBPort" "${DB_SERVER_PORT}"
-    update_config_var $ZBX_CONFIG "DBPassword" "${DB_SERVER_ZBX_PASS}"
+
+    if [ -n "${VAULT_TOKEN}" ]; then
+        update_config_var $ZBX_CONFIG "VaultDBPath" "${ZBX_VAULTDBPATH}"
+        update_config_var $ZBX_CONFIG "VaultURL" "${ZBX_VAULTURL}"
+        update_config_var $ZBX_CONFIG "DBUser"
+        update_config_var $ZBX_CONFIG "DBPassword"
+    else
+        update_config_var $ZBX_CONFIG "VaultDBPath"
+        update_config_var $ZBX_CONFIG "VaultURL"
+        update_config_var $ZBX_CONFIG "DBUser" "${DB_SERVER_ZBX_USER}"
+        update_config_var $ZBX_CONFIG "DBPassword" "${DB_SERVER_ZBX_PASS}"
+    fi
+
+    update_config_var $ZBX_CONFIG "HistoryStorageURL" "${ZBX_HISTORYSTORAGEURL}"
+    update_config_var $ZBX_CONFIG "HistoryStorageTypes" "${ZBX_HISTORYSTORAGETYPES}"
+    update_config_var $ZBX_CONFIG "HistoryStorageDateIndex" "${ZBX_HISTORYSTORAGEDATEINDEX}"
 
     update_config_var $ZBX_CONFIG "DBSocket" "${DB_SERVER_SOCKET}"
+
+    update_config_var $ZBX_CONFIG "StatsAllowedIP" "${ZBX_STATSALLOWEDIP}"
 
     update_config_var $ZBX_CONFIG "StartPollers" "${ZBX_STARTPOLLERS}"
     update_config_var $ZBX_CONFIG "StartIPMIPollers" "${ZBX_IPMIPOLLERS}"
@@ -297,8 +355,14 @@ update_zbx_config() {
     update_config_var $ZBX_CONFIG "StartDiscoverers" "${ZBX_STARTDISCOVERERS}"
     update_config_var $ZBX_CONFIG "StartHTTPPollers" "${ZBX_STARTHTTPPOLLERS}"
 
+    update_config_var $ZBX_CONFIG "StartPreprocessors" "${ZBX_STARTPREPROCESSORS}"
     update_config_var $ZBX_CONFIG "StartTimers" "${ZBX_STARTTIMERS}"
     update_config_var $ZBX_CONFIG "StartEscalators" "${ZBX_STARTESCALATORS}"
+    update_config_var $ZBX_CONFIG "StartAlerters" "${ZBX_STARTALERTERS}"
+    update_config_var $ZBX_CONFIG "StartTimers" "${ZBX_STARTTIMERS}"
+    update_config_var $ZBX_CONFIG "StartEscalators" "${ZBX_STARTESCALATORS}"
+
+    update_config_var $ZBX_CONFIG "StartLLDProcessors" "${ZBX_STARTLLDPROCESSORS}"
 
     : ${ZBX_JAVAGATEWAY_ENABLE:="false"}
     if [ "${ZBX_JAVAGATEWAY_ENABLE}" == "true" ]; then
@@ -350,6 +414,11 @@ update_zbx_config() {
     update_config_var $ZBX_CONFIG "AlertScriptsPath" "/usr/lib/zabbix/alertscripts"
     update_config_var $ZBX_CONFIG "ExternalScripts" "/usr/lib/zabbix/externalscripts"
 
+    if [ -n "${ZBX_EXPORTFILESIZE}" ]; then
+        update_config_var $ZBX_CONFIG "ExportDir" "$ZABBIX_USER_HOME_DIR/export/"
+        update_config_var $ZBX_CONFIG "ExportFileSize" "${ZBX_EXPORTFILESIZE}"
+    fi
+
     update_config_var $ZBX_CONFIG "FpingLocation" "/usr/sbin/fping"
     update_config_var $ZBX_CONFIG "Fping6Location"
 
@@ -370,7 +439,16 @@ update_zbx_config() {
     update_config_var $ZBX_CONFIG "TLSCRLFile" "${ZBX_TLSCRLFILE}"
 
     update_config_var $ZBX_CONFIG "TLSCertFile" "${ZBX_TLSCERTFILE}"
+    update_config_var $ZBX_CONFIG "TLSCipherAll" "${ZBX_TLSCIPHERALL}"
+    update_config_var $ZBX_CONFIG "TLSCipherAll13" "${ZBX_TLSCIPHERALL13}"
+    update_config_var $ZBX_CONFIG "TLSCipherCert" "${ZBX_TLSCIPHERCERT}"
+    update_config_var $ZBX_CONFIG "TLSCipherCert13" "${ZBX_TLSCIPHERCERT13}"
+    update_config_var $ZBX_CONFIG "TLSCipherPSK" "${ZBX_TLSCIPHERPSK}"
+    update_config_var $ZBX_CONFIG "TLSCipherPSK13" "${ZBX_TLSCIPHERPSK13}"
     update_config_var $ZBX_CONFIG "TLSKeyFile" "${ZBX_TLSKEYFILE}"
+
+    update_config_var $ZBX_CONFIG "TLSPSKIdentity" "${ZBX_TLSPSKIDENTITY}"
+    update_config_var $ZBX_CONFIG "TLSPSKFile" "${ZBX_TLSPSKFILE}"
 
     if [ "$(id -u)" != '0' ]; then
         update_config_var $ZBX_CONFIG "User" "$(whoami)"

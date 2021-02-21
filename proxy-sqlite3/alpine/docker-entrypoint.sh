@@ -124,6 +124,7 @@ update_zbx_config() {
         update_config_var $ZBX_CONFIG "HostnameItem" "${ZBX_HOSTNAMEITEM}"
     fi
 
+    update_config_var $ZBX_CONFIG "ListenIP" "${ZBX_LISTENIP}"
     update_config_var $ZBX_CONFIG "ListenPort" "${ZBX_LISTENPORT}"
 
     update_config_var $ZBX_CONFIG "SourceIP" "${ZBX_SOURCEIP}"
@@ -134,19 +135,31 @@ update_zbx_config() {
 
     update_config_var $ZBX_CONFIG "DebugLevel" "${ZBX_DEBUGLEVEL}"
 
+    update_config_var $ZBX_CONFIG "EnableRemoteCommands" "${ZBX_ENABLEREMOTECOMMANDS}"
+    update_config_var $ZBX_CONFIG "LogRemoteCommands" "${ZBX_LOGREMOTECOMMANDS}"
+
     update_config_var $ZBX_CONFIG "DBHost"
     update_config_var $ZBX_CONFIG "DBName" "/var/lib/zabbix/zabbix_proxy_db"
     update_config_var $ZBX_CONFIG "DBUser"
     update_config_var $ZBX_CONFIG "DBPort"
     update_config_var $ZBX_CONFIG "DBPassword"
 
-    update_config_var $ZBX_CONFIG "DBSocket" "${DB_SERVER_SOCKET}"
+    if [ -n "${VAULT_TOKEN}" ]; then
+        update_config_var $ZBX_CONFIG "VaultDBPath" "${ZBX_VAULTDBPATH}"
+        update_config_var $ZBX_CONFIG "VaultURL" "${ZBX_VAULTURL}"
+    else
+        update_config_var $ZBX_CONFIG "VaultDBPath"
+        update_config_var $ZBX_CONFIG "VaultURL"
+    fi
 
     update_config_var $ZBX_CONFIG "ProxyLocalBuffer" "${ZBX_PROXYLOCALBUFFER}"
     update_config_var $ZBX_CONFIG "ProxyOfflineBuffer" "${ZBX_PROXYOFFLINEBUFFER}"
     update_config_var $ZBX_CONFIG "HeartbeatFrequency" "${ZBX_PROXYHEARTBEATFREQUENCY}"
     update_config_var $ZBX_CONFIG "ConfigFrequency" "${ZBX_CONFIGFREQUENCY}"
     update_config_var $ZBX_CONFIG "DataSenderFrequency" "${ZBX_DATASENDERFREQUENCY}"
+
+    update_config_var $ZBX_CONFIG "StatsAllowedIP" "${ZBX_STATSALLOWEDIP}"
+    update_config_var $ZBX_CONFIG "StartPreprocessors" "${ZBX_STARTPREPROCESSORS}"
 
     update_config_var $ZBX_CONFIG "StartPollers" "${ZBX_STARTPOLLERS}"
     update_config_var $ZBX_CONFIG "StartIPMIPollers" "${ZBX_IPMIPOLLERS}"
@@ -219,6 +232,12 @@ update_zbx_config() {
     update_config_var $ZBX_CONFIG "TLSServerCertSubject" "${ZBX_TLSSERVERCERTSUBJECT}"
 
     update_config_var $ZBX_CONFIG "TLSCertFile" "${ZBX_TLSCERTFILE}"
+    update_config_var $ZBX_CONFIG "TLSCipherAll" "${ZBX_TLSCIPHERALL}"
+    update_config_var $ZBX_CONFIG "TLSCipherAll13" "${ZBX_TLSCIPHERALL13}"
+    update_config_var $ZBX_CONFIG "TLSCipherCert" "${ZBX_TLSCIPHERCERT}"
+    update_config_var $ZBX_CONFIG "TLSCipherCert13" "${ZBX_TLSCIPHERCERT13}"
+    update_config_var $ZBX_CONFIG "TLSCipherPSK" "${ZBX_TLSCIPHERPSK}"
+    update_config_var $ZBX_CONFIG "TLSCipherPSK13" "${ZBX_TLSCIPHERPSK13}"
     update_config_var $ZBX_CONFIG "TLSKeyFile" "${ZBX_TLSKEYFILE}"
 
     update_config_var $ZBX_CONFIG "TLSPSKIdentity" "${ZBX_TLSPSKIDENTITY}"

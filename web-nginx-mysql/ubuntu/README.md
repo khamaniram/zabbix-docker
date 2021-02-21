@@ -6,7 +6,7 @@ Zabbix is an enterprise-class open source distributed monitoring solution.
 
 Zabbix is software that monitors numerous parameters of a network and the health and integrity of servers. Zabbix uses a flexible notification mechanism that allows users to configure e-mail based alerts for virtually any event. This allows a fast reaction to server problems. Zabbix offers excellent reporting and data visualisation features based on the stored data. This makes Zabbix ideal for capacity planning.
 
-For more information and related downloads for Zabbix components, please visit https://hub.docker.com/u/zabbix/ and https://zabbix.com
+For more information and related downloads for Zabbix components, please visit https://hub.docker.com/u/zabbix/ and https://graphoun.com
 
 # What is Zabbix web interface?
 
@@ -164,6 +164,10 @@ The varable is PHP ``upload_max_filesize`` option. By default, value is `2M`.
 ### `ZBX_MAXINPUTTIME`
 
 The varable is PHP ``max_input_time`` option. By default, value is `300`.
+
+### `ZBX_SESSION_NAME`
+
+The variable is Zabbix frontend [definition](https://www.zabbix.com/documentation/current/manual/web_interface/definitions). String used as the name of the Zabbix frontend session cookie. By default, value is `zbx_sessionid`.
 
 ### `ZBX_DENY_GUI_ACCESS`
 

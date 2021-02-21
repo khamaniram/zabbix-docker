@@ -1,7 +1,10 @@
 version: '3.5'
 services:
  zabbix-server:
-  build: ./server-pgsql/centos
+  build:
+   context: ./server-pgsql/centos
+   cache_from:
+    - centos:centos8
   image: zabbix-server-pgsql:centos-local
   ports:
    - "10051:10051"
@@ -10,11 +13,15 @@ services:
    - /etc/timezone:/etc/timezone:ro 
    - ./zbx_env/usr/lib/zabbix/alertscripts:/usr/lib/zabbix/alertscripts:ro
    - ./zbx_env/usr/lib/zabbix/externalscripts:/usr/lib/zabbix/externalscripts:ro
+   - ./zbx_env/var/lib/zabbix/export:/var/lib/zabbix/export:rw
    - ./zbx_env/var/lib/zabbix/modules:/var/lib/zabbix/modules:ro
    - ./zbx_env/var/lib/zabbix/enc:/var/lib/zabbix/enc:ro
    - ./zbx_env/var/lib/zabbix/ssh_keys:/var/lib/zabbix/ssh_keys:ro
    - ./zbx_env/var/lib/zabbix/mibs:/var/lib/zabbix/mibs:ro
    - ./zbx_env/var/lib/zabbix/snmptraps:/var/lib/zabbix/snmptraps:ro
+#   - ./.ZBX_DB_CA_FILE:/run/secrets/root-ca.pem:ro
+#   - ./.ZBX_DB_CERT_FILE:/run/secrets/client-cert.pem:ro
+#   - ./.ZBX_DB_KEY_FILE:/run/secrets/client-key.pem:ro
   links:
    - postgres-server:postgres-server
    - zabbix-java-gateway:zabbix-java-gateway
@@ -59,13 +66,16 @@ services:
    - net.ipv4.conf.all.send_redirects=0
   labels:
    com.zabbix.description: "Zabbix server with PostgreSQL database support"
-   com.zabbix.company: "Zabbix LLC"
+   com.zabbix.company: "Graphoun AI"
    com.zabbix.component: "zabbix-server"
    com.zabbix.dbtype: "pgsql"
    com.zabbix.os: "centos"
 
  zabbix-proxy-sqlite3:
-  build: ./proxy-sqlite3/centos
+  build:
+   context: ./proxy-sqlite3/centos
+   cache_from:
+    - centos:centos8
   image: zabbix-proxy-sqlite3:centos-local
   ports:
    - "10061:10051"
@@ -110,13 +120,16 @@ services:
   stop_grace_period: 30s
   labels:
    com.zabbix.description: "Zabbix proxy with SQLite3 database support"
-   com.zabbix.company: "Zabbix LLC"
+   com.zabbix.company: "Graphoun AI"
    com.zabbix.component: "zabbix-proxy"
    com.zabbix.dbtype: "sqlite3"
    com.zabbix.os: "centos"
 
  zabbix-proxy-mysql:
-  build: ./proxy-mysql/centos
+  build:
+   context: ./proxy-mysql/centos
+   cache_from:
+    - centos:centos8
   image: zabbix-proxy-mysql:centos-local
   ports:
    - "10071:10051"
@@ -167,14 +180,16 @@ services:
   stop_grace_period: 30s
   labels:
    com.zabbix.description: "Zabbix proxy with MySQL database support"
-   com.zabbix.company: "Zabbix LLC"
+   com.zabbix.company: "Graphoun AI"
    com.zabbix.component: "zabbix-proxy"
    com.zabbix.dbtype: "mysql"
    com.zabbix.os: "centos"
 
-
  zabbix-web-apache-pgsql:
-  build: ./web-apache-pgsql/centos
+  build:
+   context: ./web-apache-pgsql/centos
+   cache_from:
+    - centos:centos8
   image: zabbix-web-apache-pgsql:centos-local
   ports:
    - "80:8080"
@@ -186,6 +201,10 @@ services:
    - /etc/localtime:/etc/localtime:ro
    - /etc/timezone:/etc/timezone:ro
    - ./zbx_env/etc/ssl/apache2:/etc/ssl/apache2:ro
+   - ./zbx_env/usr/share/zabbix/modules/:/usr/share/zabbix/modules/:ro
+#   - ./.ZBX_DB_CA_FILE:/run/secrets/root-ca.pem:ro
+#   - ./.ZBX_DB_CERT_FILE:/run/secrets/client-cert.pem:ro
+#   - ./.ZBX_DB_KEY_FILE:/run/secrets/client-key.pem:ro
   deploy:
    resources:
     limits:
@@ -221,14 +240,17 @@ services:
    - net.core.somaxconn=65535
   labels:
    com.zabbix.description: "Zabbix frontend on Apache web-server with PostgreSQL database support"
-   com.zabbix.company: "Zabbix LLC"
+   com.zabbix.company: "Graphoun AI"
    com.zabbix.component: "zabbix-frontend"
    com.zabbix.webserver: "apache2"
    com.zabbix.dbtype: "pgsql"
    com.zabbix.os: "centos"
 
  zabbix-web-nginx-pgsql:
-  build: ./web-nginx-pgsql/centos
+  build:
+   context: ./web-nginx-pgsql/centos
+   cache_from:
+    - centos:centos8
   image: zabbix-web-nginx-pgsql:centos-local
   ports:
    - "8081:8080"
@@ -240,6 +262,10 @@ services:
    - /etc/localtime:/etc/localtime:ro
    - /etc/timezone:/etc/timezone:ro
    - ./zbx_env/etc/ssl/nginx:/etc/ssl/nginx:ro
+   - ./zbx_env/usr/share/zabbix/modules/:/usr/share/zabbix/modules/:ro
+#   - ./.ZBX_DB_CA_FILE:/run/secrets/root-ca.pem:ro
+#   - ./.ZBX_DB_CERT_FILE:/run/secrets/client-cert.pem:ro
+#   - ./.ZBX_DB_KEY_FILE:/run/secrets/client-key.pem:ro
   deploy:
    resources:
     limits:
@@ -275,14 +301,17 @@ services:
    - net.core.somaxconn=65535
   labels:
    com.zabbix.description: "Zabbix frontend on Nginx web-server with PostgreSQL database support"
-   com.zabbix.company: "Zabbix LLC"
+   com.zabbix.company: "Graphoun AI"
    com.zabbix.component: "zabbix-frontend"
    com.zabbix.webserver: "nginx"
    com.zabbix.dbtype: "pgsql"
    com.zabbix.os: "centos"
 
  zabbix-agent:
-  build: ./agent/centos
+  build:
+   context: ./agent/centos
+   cache_from:
+    - centos:centos8
   image: zabbix-agent:centos-local
   ports:
    - "10050:10050"
@@ -317,12 +346,15 @@ services:
   stop_grace_period: 5s
   labels:
    com.zabbix.description: "Zabbix agent"
-   com.zabbix.company: "Zabbix LLC"
+   com.zabbix.company: "Graphoun AI"
    com.zabbix.component: "zabbix-agentd"
    com.zabbix.os: "centos"
 
  zabbix-java-gateway:
-  build: ./java-gateway/centos
+  build:
+   context: ./java-gateway/centos
+   cache_from:
+    - centos:centos8
   image: zabbix-java-gateway:centos-local
   ports:
    - "10052:10052"
@@ -344,7 +376,7 @@ services:
   stop_grace_period: 5s
   labels:
    com.zabbix.description: "Zabbix Java Gateway"
-   com.zabbix.company: "Zabbix LLC"
+   com.zabbix.company: "Graphoun AI"
    com.zabbix.component: "java-gateway"
    com.zabbix.os: "centos"
 
@@ -352,7 +384,7 @@ services:
   build:
    context: ./snmptraps/centos
    cache_from:
-    - centos:centos7
+    - centos:centos8
   image: zabbix-snmptraps:centos-local
   ports:
    - "162:1162/udp"
@@ -374,16 +406,17 @@ services:
   stop_grace_period: 5s
   labels:
    com.zabbix.description: "Zabbix snmptraps"
-   com.zabbix.company: "Zabbix LLC"
+   com.zabbix.company: "Graphoun AI"
    com.zabbix.component: "snmptraps"
    com.zabbix.os: "centos"
 
  mysql-server:
-  image: mysql:5.7
+  image: mysql:8.0
   command:
    - mysqld
    - --character-set-server=utf8
    - --collation-server=utf8_bin
+   - --default-authentication-plugin=mysql_native_password
   volumes:
    - ./zbx_env/var/lib/mysql:/var/lib/mysql:rw
   env_file:
@@ -402,8 +435,12 @@ services:
 
  postgres-server:
   image: postgres:alpine
+#  command: -c ssl=on -c ssl_cert_file=/run/secrets/server-cert.pem -c ssl_key_file=/run/secrets/server-key.pem -c ssl_ca_file=/run/secrets/root-ca.pem
   volumes:
    - ./zbx_env/var/lib/postgresql/data:/var/lib/postgresql/data:rw
+   - ./.ZBX_DB_CA_FILE:/run/secrets/root-ca.pem:ro
+   - ./.ZBX_DB_CERT_FILE:/run/secrets/server-cert.pem:ro
+   - ./.ZBX_DB_KEY_FILE:/run/secrets/server-key.pem:ro
   env_file:
    - .env_db_pgsql
   secrets:
@@ -426,6 +463,16 @@ services:
   image: busybox
   volumes:
    - ./zbx_env/var/lib/postgresql/data:/var/lib/postgresql/data:rw
+
+# elasticsearch:
+#  image: elasticsearch
+#  environment:
+#   - transport.host=0.0.0.0
+#   - discovery.zen.minimum_master_nodes=1
+#  networks:
+#   zbx_net_backend:
+#    aliases:
+#     - elasticsearch
 
 networks:
   zbx_net_frontend:

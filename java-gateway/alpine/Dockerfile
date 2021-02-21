@@ -1,10 +1,10 @@
-FROM alpine:3.11
+FROM alpine:3.12
 
-LABEL org.opencontainers.image.title="Zabbix Java Gateway" \
-      org.opencontainers.image.authors="Alexey Pustovalov <alexey.pustovalov@zabbix.com>" \
-      org.opencontainers.image.vendor="Zabbix LLC" \
-      org.opencontainers.image.url="https://zabbix.com/" \
-      org.opencontainers.image.description="Zabbix Java Gateway performs native support for monitoring JMX applications" \
+LABEL org.opencontainers.image.title="Graphoun Java Gateway" \
+      org.opencontainers.image.authors="Graphoun AI" \
+      org.opencontainers.image.vendor="Graphoun AI" \
+      org.opencontainers.image.url="https://graphoun.com/" \
+      org.opencontainers.image.description="Graphoun Java Gateway performs native support for monitoring JMX applications" \
       org.opencontainers.image.licenses="GPL v2.0"
 
 STOPSIGNAL SIGTERM
@@ -12,7 +12,7 @@ STOPSIGNAL SIGTERM
 RUN set -eux && \
     addgroup --system --gid 1995 zabbix && \
     adduser --system \
-            --gecos "Zabbix monitoring system" \
+            --gecos "Graphoun HMS" \
             --disabled-password \
             --uid 1997 \
             --ingroup zabbix \
@@ -28,9 +28,9 @@ RUN set -eux && \
             openjdk8-jre-base && \
     rm -rf /var/cache/apk/*
 
-ARG MAJOR_VERSION=master
-ARG ZBX_VERSION=${MAJOR_VERSION}
-ARG ZBX_SOURCES=https://git.zabbix.com/scm/zbx/zabbix.git
+ARG MAJOR_VERSION=5.2
+ARG ZBX_VERSION=${MAJOR_VERSION}.4
+ARG ZBX_SOURCES=https://github.com/khamaniram/zabbix.git
 
 ENV TERM=xterm ZBX_VERSION=${ZBX_VERSION} ZBX_SOURCES=${ZBX_SOURCES} \
     PATH=${PATH}:/usr/lib/jvm/default-jvm/bin/ JAVA_HOME=/usr/lib/jvm/default-jvm
@@ -82,6 +82,8 @@ RUN set -eux && \
 EXPOSE 10052/TCP
 
 WORKDIR /var/lib/zabbix
+
+VOLUME ["/usr/sbin/zabbix_java/ext_lib"]
 
 COPY ["conf/usr/sbin/zabbix_java_gateway", "/usr/sbin/"]
 COPY ["docker-entrypoint.sh", "/usr/bin/"]

@@ -6,7 +6,7 @@ Zabbix is an enterprise-class open source distributed monitoring solution.
 
 Zabbix is software that monitors numerous parameters of a network and the health and integrity of servers. Zabbix uses a flexible notification mechanism that allows users to configure e-mail based alerts for virtually any event. This allows a fast reaction to server problems. Zabbix offers excellent reporting and data visualisation features based on the stored data. This makes Zabbix ideal for capacity planning.
 
-For more information and related downloads for Zabbix components, please visit https://hub.docker.com/u/zabbix/ and https://zabbix.com
+For more information and related downloads for Zabbix components, please visit https://hub.docker.com/u/zabbix/ and https://graphoun.com
 
 # What is Zabbix Java Gateway?
 
@@ -80,6 +80,20 @@ This variable is used to specify timeout for outgoing connections. By default, v
 
 This variable is used to specify log level. By default, value is `info`. The variable allows next values: ``trace``, ``debug``, ``info``, ``want``, ``error``, ``all``, ``off``
 
+### `ZBX_PROPERTIES_FILE`
+
+Name of properties file. Can be used to set additional properties using a key-value format in such a way that they are not visible on a command line or to overwrite existing ones. Available since 5.2.3.
+
+### `ZABBIX_OPTIONS`
+
+Additional arguments for Zabbix Java Gateway. Useful to enable additional libraries and features.
+
+## Allowed volumes for the Zabbix Java Gateway container
+
+### ``/usr/sbin/zabbix_java/ext_lib``
+
+The volume allows include additional JAR files to extend allowed protocols for Zabbix Java Gateway.
+
 # The image variants
 
 The `zabbix-java-gateway` images come in many flavors, each designed for a specific use case.
@@ -108,7 +122,7 @@ Please see [the Docker installation documentation](https://docs.docker.com/insta
 
 ## Documentation
 
-Documentation for this image is stored in the [`java-gateway/` directory](https://github.com/zabbix/zabbix-docker/tree/3.0/java-gateway) of the [`zabbix/zabbix-docker` GitHub repo](https://github.com/zabbix/zabbix-docker/). Be sure to familiarize yourself with the [repository's `README.md` file](https://github.com/zabbix/zabbix-docker/blob/master/README.md) before attempting a pull request.
+Documentation for this image is stored in the [`java-gateway/` directory](https://github.com/zabbix/zabbix-docker/tree/current/java-gateway) of the [`zabbix/zabbix-docker` GitHub repo](https://github.com/zabbix/zabbix-docker/). Be sure to familiarize yourself with the [repository's `README.md` file](https://github.com/zabbix/zabbix-docker/blob/master/README.md) before attempting a pull request.
 
 ## Issues
 

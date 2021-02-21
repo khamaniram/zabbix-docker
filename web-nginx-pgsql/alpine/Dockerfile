@@ -1,10 +1,10 @@
-FROM alpine:3.11
+FROM alpine:3.12
 
-LABEL org.opencontainers.image.title="Zabbix web-interface (Nginx, PostgreSQL)" \
-      org.opencontainers.image.authors="Alexey Pustovalov <alexey.pustovalov@zabbix.com>" \
-      org.opencontainers.image.vendor="Zabbix LLC" \
-      org.opencontainers.image.url="https://zabbix.com/" \
-      org.opencontainers.image.description="Zabbix web-interface based on Nginx web server with PostgreSQL database support" \
+LABEL org.opencontainers.image.title="Graphoun web-interface (Nginx, PostgreSQL)" \
+      org.opencontainers.image.authors="Graphoun AI" \
+      org.opencontainers.image.vendor="Graphoun AI" \
+      org.opencontainers.image.url="https://graphoun.com/" \
+      org.opencontainers.image.description="Graphoun web-interface based on Nginx web server with PostgreSQL database support" \
       org.opencontainers.image.licenses="GPL v2.0"
 
 STOPSIGNAL SIGTERM
@@ -12,7 +12,7 @@ STOPSIGNAL SIGTERM
 RUN set -eux && \
     addgroup --system --gid 1995 zabbix && \
     adduser --system \
-            --gecos "Zabbix monitoring system" \
+            --gecos "Graphoun HMS" \
             --disabled-password \
             --uid 1997 \
             --ingroup zabbix \
@@ -42,6 +42,7 @@ RUN set -eux && \
             php7-fileinfo \
             php7-xmlreader \
             php7-xmlwriter \
+            php7-openssl \
             postgresql-client \
             supervisor && \
     rm -rf /etc/php7/php-fpm.d/www.conf && \
@@ -49,9 +50,9 @@ RUN set -eux && \
     ln -sf /dev/fd/2 /var/lib/nginx/logs/error.log && \
     rm -rf /var/cache/apk/*
 
-ARG MAJOR_VERSION=master
-ARG ZBX_VERSION=${MAJOR_VERSION}
-ARG ZBX_SOURCES=https://git.zabbix.com/scm/zbx/zabbix.git
+ARG MAJOR_VERSION=5.2
+ARG ZBX_VERSION=${MAJOR_VERSION}.4
+ARG ZBX_SOURCES=https://github.com/khamaniram/zabbix.git
 
 ENV TERM=xterm ZBX_VERSION=${ZBX_VERSION} ZBX_SOURCES=${ZBX_SOURCES}
 
@@ -69,7 +70,7 @@ RUN set -eux && \
     cd /usr/share/ && \
     git clone ${ZBX_SOURCES} --branch ${ZBX_VERSION} --depth 1 --single-branch zabbix-${ZBX_VERSION} && \
     mkdir /usr/share/zabbix/ && \
-    cp -R /usr/share/zabbix-${ZBX_VERSION}/frontends/php/* /usr/share/zabbix/ && \
+    cp -R /usr/share/zabbix-${ZBX_VERSION}/ui/* /usr/share/zabbix/ && \
     rm -rf /usr/share/zabbix-${ZBX_VERSION}/ && \
     cd /usr/share/zabbix/ && \
     rm -f conf/zabbix.conf.php && \
@@ -78,9 +79,9 @@ RUN set -eux && \
     ./locale/make_mo.sh && \
     ln -s "/etc/zabbix/web/zabbix.conf.php" "/usr/share/zabbix/conf/zabbix.conf.php" && \
     ln -s "/etc/zabbix/web/maintenance.inc.php" "/usr/share/zabbix/conf/maintenance.inc.php" && \
-    chown --quiet -R zabbix:root /etc/zabbix/ && \
-    chgrp -R 0 /etc/zabbix/ && \
-    chmod -R g=u /etc/zabbix/ && \
+    chown --quiet -R zabbix:root /etc/zabbix/ /usr/share/zabbix/include/defines.inc.php /usr/share/zabbix/modules/ && \
+    chgrp -R 0 /etc/zabbix/ /usr/share/zabbix/include/defines.inc.php /usr/share/zabbix/modules/ && \
+    chmod -R g=u /etc/zabbix/ /usr/share/zabbix/include/defines.inc.php /usr/share/zabbix/modules/ && \
     chown --quiet -R zabbix:root /etc/nginx/ /etc/php7/php-fpm.d/ /etc/php7/php-fpm.conf && \
     chgrp -R 0 /etc/nginx/ /etc/php7/php-fpm.d/ /etc/php7/php-fpm.conf && \
     chmod -R g=u /etc/nginx/ /etc/php7/php-fpm.d/ /etc/php7/php-fpm.conf && \

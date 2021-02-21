@@ -1,10 +1,10 @@
-FROM alpine:3.11
+FROM alpine:3.12
 
-LABEL org.opencontainers.image.title="Zabbix proxy (SQLite3)" \
-      org.opencontainers.image.authors="Alexey Pustovalov <alexey.pustovalov@zabbix.com>" \
-      org.opencontainers.image.vendor="Zabbix LLC" \
-      org.opencontainers.image.url="https://zabbix.com/" \
-      org.opencontainers.image.description="Zabbix proxy with SQLite3 database support" \
+LABEL org.opencontainers.image.title="Graphoun proxy (SQLite3)" \
+      org.opencontainers.image.authors="Graphoun AI" \
+      org.opencontainers.image.vendor="Graphoun AI" \
+      org.opencontainers.image.url="https://graphoun.com/" \
+      org.opencontainers.image.description="Graphoun proxy with SQLite3 database support" \
       org.opencontainers.image.licenses="GPL v2.0"
 
 STOPSIGNAL SIGTERM
@@ -12,7 +12,7 @@ STOPSIGNAL SIGTERM
 RUN set -eux && \
     addgroup --system --gid 1995 zabbix && \
     adduser --system \
-            --gecos "Zabbix monitoring system" \
+            --gecos "Graphoun HMS" \
             --disabled-password \
             --uid 1997 \
             --ingroup zabbix \
@@ -38,18 +38,20 @@ RUN set -eux && \
             fping \
             iputils \
             libcurl \
+            libevent \
             libldap \
-            libssh2 \
+            libssh \
             libxml2 \
             net-snmp-agent-libs \
             openipmi-libs \
+            pcre \
             sqlite-libs \
             unixodbc && \
     rm -rf /var/cache/apk/*
 
-ARG MAJOR_VERSION=master
-ARG ZBX_VERSION=${MAJOR_VERSION}
-ARG ZBX_SOURCES=https://git.zabbix.com/scm/zbx/zabbix.git
+ARG MAJOR_VERSION=5.2
+ARG ZBX_VERSION=${MAJOR_VERSION}.4
+ARG ZBX_SOURCES=https://github.com/khamaniram/zabbix.git
 ENV ZBX_VERSION=${ZBX_VERSION} ZBX_SOURCES=${ZBX_SOURCES}
 
 ENV TERM=xterm ZBX_VERSION=${ZBX_VERSION} ZBX_SOURCES=${ZBX_SOURCES} \
@@ -65,11 +67,13 @@ RUN set -eux && \
             automake \
             coreutils \
             curl-dev \
-            libssh2-dev \
+            libevent-dev \
+            libssh-dev \
             libxml2-dev \
             net-snmp-dev \
             openipmi-dev \
             openldap-dev \
+            pcre-dev \
             sqlite-dev \
             git \
             g++ \
@@ -96,7 +100,7 @@ RUN set -eux && \
             --with-net-snmp \
             --with-openipmi \
             --with-openssl \
-            --with-ssh2 \
+            --with-ssh \
             --with-unixodbc \
             --enable-ipv6 \
             --silent && \

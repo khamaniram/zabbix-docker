@@ -1,10 +1,10 @@
-FROM centos:centos7
+FROM centos:centos8
 
-LABEL org.opencontainers.image.title="Zabbix web-interface (Nginx, MySQL)" \
-      org.opencontainers.image.authors="Alexey Pustovalov <alexey.pustovalov@zabbix.com>" \
-      org.opencontainers.image.vendor="Zabbix LLC" \
-      org.opencontainers.image.url="https://zabbix.com/" \
-      org.opencontainers.image.description="Zabbix web-interface based on Nginx web server with MySQL database support" \
+LABEL org.opencontainers.image.title="Graphoun web-interface (Nginx, MySQL)" \
+      org.opencontainers.image.authors="Graphoun AI" \
+      org.opencontainers.image.vendor="Graphoun AI" \
+      org.opencontainers.image.url="https://graphoun.com/" \
+      org.opencontainers.image.description="Graphoun web-interface based on Nginx web server with MySQL database support" \
       org.opencontainers.image.licenses="GPL v2.0"
 
 STOPSIGNAL SIGTERM
@@ -12,7 +12,7 @@ STOPSIGNAL SIGTERM
 RUN set -eux && \
     groupadd --system --gid 1995 zabbix && \
     useradd \
-            --system --comment "Zabbix monitoring system" \
+            --system --comment "Graphoun HMS" \
             -g zabbix -G root \
             --uid 1997 \
             --shell /sbin/nologin \
@@ -21,29 +21,30 @@ RUN set -eux && \
     mkdir -p /etc/zabbix && \
     mkdir -p /etc/zabbix/web && \
     mkdir -p /var/lib/php/session && \
-    yum --quiet makecache && \
-    yum -y install epel-release && \
-    yum -y install --setopt=tsflags=nodocs \
+    dnf --quiet makecache && \
+    dnf -y install epel-release && \
+    dnf -y install --setopt=install_weak_deps=False --best --setopt=tsflags=nodocs \
             curl \
-            mariadb \
+            mysql \
             nginx \
             php-bcmath \
             php-fpm \
             php-gd \
             php-ldap \
             php-mbstring \
-            php-mysql \
+            php-mysqlnd \
+            php-json \
             php-xml \
             supervisor && \
     rm -f /etc/nginx/conf.d/*.conf  && \
     rm -f /etc/php-fpm.d/www.conf && \
-    yum -y clean all && \
+    dnf -y clean all && \
     rm -rf /var/cache/yum /var/lib/yum/yumdb/* /usr/lib/udev/hwdb.d/* && \
-    rm -rf /etc/udev/hwdb.bin /root/.pki
+    rm -rf /var/cache/dnf /etc/udev/hwdb.bin /root/.pki
 
-ARG MAJOR_VERSION=master
-ARG ZBX_VERSION=${MAJOR_VERSION}
-ARG ZBX_SOURCES=https://git.zabbix.com/scm/zbx/zabbix.git
+ARG MAJOR_VERSION=5.2
+ARG ZBX_VERSION=${MAJOR_VERSION}.4
+ARG ZBX_SOURCES=https://github.com/khamaniram/zabbix.git
 
 ENV TERM=xterm ZBX_VERSION=${ZBX_VERSION} ZBX_SOURCES=${ZBX_SOURCES}
 
@@ -54,14 +55,16 @@ LABEL org.opencontainers.image.documentation="https://www.zabbix.com/documentati
 COPY ["conf/etc/", "/etc/"]
 
 RUN set -eux && \
-    yum --quiet makecache && \
-    yum -y install --setopt=tsflags=nodocs \
+    dnf --quiet makecache && \
+    dnf -y install --setopt=install_weak_deps=False --best --setopt=tsflags=nodocs \
+            glibc-locale-source && \
+    dnf -y install --setopt=install_weak_deps=False --best --setopt=tsflags=nodocs \
             gettext \
             git && \
     cd /usr/share/ && \
     git clone ${ZBX_SOURCES} --branch ${ZBX_VERSION} --depth 1 --single-branch zabbix-${ZBX_VERSION} && \
     mkdir /usr/share/zabbix/ && \
-    cp -R /usr/share/zabbix-${ZBX_VERSION}/frontends/php/* /usr/share/zabbix/ && \
+    cp -R /usr/share/zabbix-${ZBX_VERSION}/ui/* /usr/share/zabbix/ && \
     rm -rf /usr/share/zabbix-${ZBX_VERSION}/ && \
     cd /usr/share/zabbix/ && \
     rm -f conf/zabbix.conf.php && \
@@ -73,9 +76,9 @@ RUN set -eux && \
     cat /usr/share/zabbix/include/locales.inc.php | grep display | grep true | awk '{$1=$1};1' | \
                 cut -d"'" -f 2 | sort | \
                 xargs -I '{}' bash -c 'echo "{}" && localedef -c -i {} -f UTF-8 {}.UTF-8 2>/dev/null' && \
-    chown --quiet -R zabbix:root /etc/zabbix/ && \
-    chgrp -R 0 /etc/zabbix/ && \
-    chmod -R g=u /etc/zabbix/ && \
+    chown --quiet -R zabbix:root /etc/zabbix/ /usr/share/zabbix/modules/ && \
+    chgrp -R 0 /etc/zabbix/ /usr/share/zabbix/modules/ && \
+    chmod -R g=u /etc/zabbix/ /usr/share/zabbix/modules/ && \
     chown --quiet -R zabbix:root /etc/nginx/ /etc/php-fpm.d/ /etc/php-fpm.conf && \
     chgrp -R 0 /etc/nginx/ /etc/php-fpm.d/ /etc/php-fpm.conf && \
     chmod -R g=u /etc/nginx/ /etc/php-fpm.d/ /etc/php-fpm.conf && \
@@ -85,10 +88,11 @@ RUN set -eux && \
     chown --quiet -R zabbix:root /usr/share/zabbix/include/defines.inc.php && \
     chgrp -R 0 /usr/share/zabbix/include/defines.inc.php && \
     chmod -R g=u /usr/share/zabbix/include/defines.inc.php && \
-    yum -y history undo `yum -q history | sed -n 3p |column -t | cut -d' ' -f1` && \
-    yum -y clean all && \
+    dnf -y history undo `dnf -q history | sed -n 3p |column -t | cut -d' ' -f1` && \
+    dnf -y erase glibc-locale-source glibc-langpack-en && \
+    dnf -y clean all && \
     rm -rf /var/cache/yum /var/lib/yum/yumdb/* /usr/lib/udev/hwdb.d/* && \
-    rm -rf /etc/udev/hwdb.bin /root/.pki
+    rm -rf /var/cache/dnf /etc/udev/hwdb.bin /root/.pki
 
 EXPOSE 8080/TCP 8443/TCP
 

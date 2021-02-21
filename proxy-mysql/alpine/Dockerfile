@@ -1,10 +1,10 @@
-FROM alpine:3.11
+FROM alpine:3.12
 
-LABEL org.opencontainers.image.title="Zabbix proxy (MySQL)" \
-      org.opencontainers.image.authors="Alexey Pustovalov <alexey.pustovalov@zabbix.com>" \
-      org.opencontainers.image.vendor="Zabbix LLC" \
-      org.opencontainers.image.url="https://zabbix.com/" \
-      org.opencontainers.image.description="Zabbix proxy with MySQL database support" \
+LABEL org.opencontainers.image.title="Graphoun proxy (MySQL)" \
+      org.opencontainers.image.authors="Graphoun AI" \
+      org.opencontainers.image.vendor="Graphoun AI" \
+      org.opencontainers.image.url="https://graphoun.com/" \
+      org.opencontainers.image.description="Graphoun proxy with MySQL database support" \
       org.opencontainers.image.licenses="GPL v2.0"
 
 STOPSIGNAL SIGTERM
@@ -12,7 +12,7 @@ STOPSIGNAL SIGTERM
 RUN set -eux && \
     addgroup --system --gid 1995 zabbix && \
     adduser --system \
-            --gecos "Zabbix monitoring system" \
+            --gecos "Graphoun HMS" \
             --disabled-password \
             --uid 1997 \
             --ingroup zabbix \
@@ -38,20 +38,22 @@ RUN set -eux && \
             bash \
             iputils \
             libcurl \
+            libevent \
             libldap \
-            libssh2 \
+            libssh \
             libxml2 \
             mariadb-client \
             mariadb-connector-c \
             net-snmp-agent-libs \
             openipmi-libs \
+            pcre \
             unixodbc \
             fping && \
     rm -rf /var/cache/apk/*
 
-ARG MAJOR_VERSION=master
-ARG ZBX_VERSION=${MAJOR_VERSION}
-ARG ZBX_SOURCES=https://git.zabbix.com/scm/zbx/zabbix.git
+ARG MAJOR_VERSION=5.2
+ARG ZBX_VERSION=${MAJOR_VERSION}.4
+ARG ZBX_SOURCES=https://github.com/khamaniram/zabbix.git
 
 ENV TERM=xterm ZBX_VERSION=${ZBX_VERSION} ZBX_SOURCES=${ZBX_SOURCES} \
     MIBDIRS=/usr/share/snmp/mibs:/var/lib/zabbix/mibs MIBS=+ALL
@@ -66,15 +68,17 @@ RUN set -eux && \
             automake \
             coreutils \
             curl-dev \
+            libevent-dev \
             g++ \
             git \
             make \
-            libssh2-dev \
+            libssh-dev \
             libxml2-dev \
             mysql-dev \
             net-snmp-dev \
             openipmi-dev \
             openldap-dev \
+            pcre-dev \
             unixodbc-dev && \
     cd /tmp/ && \
     git clone ${ZBX_SOURCES} --branch ${ZBX_VERSION} --depth 1 --single-branch zabbix-${ZBX_VERSION} && \
@@ -97,7 +101,7 @@ RUN set -eux && \
             --with-net-snmp \
             --with-openipmi \
             --with-openssl \
-            --with-ssh2 \
+            --with-ssh \
             --with-unixodbc \
             --enable-ipv6 \
             --silent && \

@@ -17,9 +17,6 @@ fi
 # Default Zabbix server port number
 : ${ZBX_SERVER_PORT:="10051"}
 
-# Default timezone for web interface
-: ${PHP_TZ:="Europe/Riga"}
-
 # Default directories
 # Configuration files directory
 ZABBIX_ETC_DIR="/etc/zabbix"
@@ -93,6 +90,28 @@ check_variables() {
     DB_SERVER_DBNAME=${MYSQL_DATABASE:-"zabbix"}
 }
 
+db_tls_params() {
+    local result=""
+
+    if [ "${ZBX_DB_ENCRYPTION}" == "true" ]; then
+        result="--ssl"
+
+        if [ -n "${ZBX_DB_CA_FILE}" ]; then
+            result="${result} --ssl-ca=${ZBX_DB_CA_FILE}"
+        fi
+
+        if [ -n "${ZBX_DB_KEY_FILE}" ]; then
+            result="${result} --ssl-key=${ZBX_DB_KEY_FILE}"
+        fi
+
+        if [ -n "${ZBX_DB_CERT_FILE}" ]; then
+            result="${result} --ssl-cert=${ZBX_DB_CERT_FILE}"
+        fi
+    fi
+
+    echo $result
+}
+
 check_db_connect() {
     echo "********************"
     echo "* DB_SERVER_HOST: ${DB_SERVER_HOST}"
@@ -110,10 +129,12 @@ check_db_connect() {
 
     WAIT_TIMEOUT=5
 
+    ssl_opts="$(db_tls_params)"
+
     export MYSQL_PWD="${DB_SERVER_ROOT_PASS}"
 
     while [ ! "$(mysqladmin ping -h ${DB_SERVER_HOST} -P ${DB_SERVER_PORT} -u ${DB_SERVER_ROOT_USER} \
-                --silent --connect_timeout=10)" ]; do
+                --silent --connect_timeout=10 $ssl_opts)" ]; do
         echo "**** MySQL server is not available. Waiting $WAIT_TIMEOUT seconds..."
         sleep $WAIT_TIMEOUT
     done
@@ -155,7 +176,7 @@ prepare_zbx_web_config() {
     export ZBX_POSTMAXSIZE=${ZBX_POSTMAXSIZE:-"16M"}
     export ZBX_UPLOADMAXFILESIZE=${ZBX_UPLOADMAXFILESIZE:-"2M"}
     export ZBX_MAXINPUTTIME=${ZBX_MAXINPUTTIME:-"300"}
-    export PHP_TZ=${PHP_TZ:-"Europe/Riga"}
+    export PHP_TZ=${PHP_TZ}
 
     export DB_SERVER_TYPE="MYSQL"
     export DB_SERVER_HOST=${DB_SERVER_HOST}
@@ -167,6 +188,29 @@ prepare_zbx_web_config() {
     export ZBX_SERVER_HOST=${ZBX_SERVER_HOST}
     export ZBX_SERVER_PORT=${ZBX_SERVER_PORT:-"10051"}
     export ZBX_SERVER_NAME=${ZBX_SERVER_NAME}
+
+    export ZBX_DB_ENCRYPTION=${ZBX_DB_ENCRYPTION:-"false"}
+    export ZBX_DB_KEY_FILE=${ZBX_DB_KEY_FILE}
+    export ZBX_DB_CERT_FILE=${ZBX_DB_CERT_FILE}
+    export ZBX_DB_CA_FILE=${ZBX_DB_CA_FILE}
+    export ZBX_DB_VERIFY_HOST=${ZBX_DB_VERIFY_HOST-"false"}
+
+    export ZBX_VAULTURL=${ZBX_VAULTURL}
+    export ZBX_VAULTDBPATH=${ZBX_VAULTDBPATH}
+    export VAULT_TOKEN=${VAULT_TOKEN}
+
+    export DB_DOUBLE_IEEE754=${DB_DOUBLE_IEEE754:-"true"}
+
+    export ZBX_HISTORYSTORAGEURL=${ZBX_HISTORYSTORAGEURL}
+    export ZBX_HISTORYSTORAGETYPES=${ZBX_HISTORYSTORAGETYPES:-"[]"}
+
+    export ZBX_SSO_SETTINGS=${ZBX_SSO_SETTINGS:-""}
+
+    if [ -n "${ZBX_SESSION_NAME}" ]; then
+        cp "$ZABBIX_WWW_ROOT/include/defines.inc.php" "/tmp/defines.inc.php_tmp"
+        sed "/ZBX_SESSION_NAME/s/'[^']*'/'${ZBX_SESSION_NAME}'/2" "/tmp/defines.inc.php_tmp" > "$ZABBIX_WWW_ROOT/include/defines.inc.php"
+        rm -f "/tmp/defines.inc.php_tmp"
+    fi
 
     if [ "${ENABLE_WEB_ACCESS_LOG:-"true"}" == "false" ]; then
         sed -ri \

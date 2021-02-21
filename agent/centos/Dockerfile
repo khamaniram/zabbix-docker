@@ -1,10 +1,10 @@
-FROM centos:centos7
+FROM centos:centos8
 
-LABEL org.opencontainers.image.title="Zabbix agent" \
-      org.opencontainers.image.authors="Alexey Pustovalov <alexey.pustovalov@zabbix.com>" \
-      org.opencontainers.image.vendor="Zabbix LLC" \
-      org.opencontainers.image.url="https://zabbix.com/" \
-      org.opencontainers.image.description="Zabbix agent is deployed on a monitoring target to actively monitor local resources and applications" \
+LABEL org.opencontainers.image.title="Graphoun agent" \
+      org.opencontainers.image.authors="Graphoun AI" \
+      org.opencontainers.image.vendor="Graphoun AI" \
+      org.opencontainers.image.url="https://graphoun.com/" \
+      org.opencontainers.image.description="Graphoun agent is deployed on a monitoring target to actively monitor local resources and applications" \
       org.opencontainers.image.licenses="GPL v2.0"
 
 STOPSIGNAL SIGTERM
@@ -24,7 +24,7 @@ RUN set -eux && \
     esac; \
     groupadd --system --gid 1995 zabbix && \
     useradd \
-            --system --comment "Zabbix monitoring system" \
+            --system --comment "Graphoun HMS" \
             -g zabbix -G root \
             --uid 1997 \
             --shell /sbin/nologin \
@@ -35,11 +35,11 @@ RUN set -eux && \
     mkdir -p /var/lib/zabbix && \
     mkdir -p /var/lib/zabbix/enc && \
     mkdir -p /var/lib/zabbix/modules && \
-    yum --quiet makecache && \
-    yum -y install --setopt=tsflags=nodocs \
+    dnf --quiet makecache && \
+    dnf -y install --setopt=tsflags=nodocs --setopt=install_weak_deps=False --best \
+            libcurl-minimal \
+            zlib \
             tzdata \
-            openldap \
-            libcurl \
             openssl-libs && \
     curl -L "https://github.com/krallin/tini/releases/download/${TINI_VERSION}/tini-${ARCH_SUFFIX}" -o /sbin/tini && \
     curl -L "https://github.com/krallin/tini/releases/download/${TINI_VERSION}/tini-${ARCH_SUFFIX}.asc" -o /tmp/tini.asc && \
@@ -55,13 +55,13 @@ RUN set -eux && \
     gpg --batch --verify /tmp/tini.asc /sbin/tini && \
     rm -rf "$GNUPGHOME" /tmp/tini.asc && \
     chmod +x /sbin/tini && \
-    yum -y clean all && \
+    dnf -y clean all && \
     rm -rf /var/cache/yum /var/lib/yum/yumdb/* /usr/lib/udev/hwdb.d/* && \
-    rm -rf /etc/udev/hwdb.bin /root/.pki
+    rm -rf /var/cache/dnf /etc/udev/hwdb.bin /root/.pki
 
-ARG MAJOR_VERSION=master
-ARG ZBX_VERSION=${MAJOR_VERSION}
-ARG ZBX_SOURCES=https://git.zabbix.com/scm/zbx/zabbix.git
+ARG MAJOR_VERSION=5.2
+ARG ZBX_VERSION=${MAJOR_VERSION}.4
+ARG ZBX_SOURCES=https://github.com/khamaniram/zabbix.git
 
 ENV TERM=xterm ZBX_VERSION=${ZBX_VERSION} ZBX_SOURCES=${ZBX_SOURCES}
 
@@ -70,10 +70,11 @@ LABEL org.opencontainers.image.documentation="https://www.zabbix.com/documentati
       org.opencontainers.image.source="${ZBX_SOURCES}"
 
 RUN set -eux && \
-    yum --quiet makecache && \
-    yum -y install --setopt=tsflags=nodocs \
+    dnf --quiet makecache && \
+    dnf -y install --setopt=tsflags=nodocs --setopt=install_weak_deps=False --best \
             autoconf \
             automake \
+            pcre-devel \
             libcurl-devel \
             make \
             openssl-devel \
@@ -106,13 +107,13 @@ RUN set -eux && \
     cp /tmp/zabbix-${ZBX_VERSION}/conf/zabbix_agentd.conf /etc/zabbix/zabbix_agentd.conf && \
     cd /tmp/ && \
     rm -rf /tmp/zabbix-${ZBX_VERSION}/ && \
-    yum -y history undo `yum -q history | sed -n 3p |column -t | cut -d' ' -f1` && \
-    yum -y clean all && \
+    dnf -y history undo `dnf -q history | sed -n 3p |column -t | cut -d' ' -f1` && \
+    dnf -y clean all && \
     chown --quiet -R zabbix:root /etc/zabbix/ /var/lib/zabbix/ && \
     chgrp -R 0 /etc/zabbix/ /var/lib/zabbix/ && \
     chmod -R g=u /etc/zabbix/ /var/lib/zabbix/ && \
     rm -rf /var/cache/yum /var/lib/yum/yumdb/* /usr/lib/udev/hwdb.d/* && \
-    rm -rf /etc/udev/hwdb.bin /root/.pki
+    rm -rf /var/cache/dnf /etc/udev/hwdb.bin /root/.pki
 
 EXPOSE 10050/TCP
 

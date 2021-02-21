@@ -1,13 +1,14 @@
 version: '3.5'
 services:
  zabbix-server:
-  image: zabbix/zabbix-server-mysql:ubuntu-latest
+  image: zabbix/zabbix-server-mysql:ubuntu-5.2-latest
   ports:
    - "10051:10051"
   volumes:
    - /etc/localtime:/etc/localtime:ro
    - ./zbx_env/usr/lib/zabbix/alertscripts:/usr/lib/zabbix/alertscripts:ro
    - ./zbx_env/usr/lib/zabbix/externalscripts:/usr/lib/zabbix/externalscripts:ro
+   - ./zbx_env/var/lib/zabbix/export:/var/lib/zabbix/export:rw
    - ./zbx_env/var/lib/zabbix/modules:/var/lib/zabbix/modules:ro
    - ./zbx_env/var/lib/zabbix/enc:/var/lib/zabbix/enc:ro
    - ./zbx_env/var/lib/zabbix/ssh_keys:/var/lib/zabbix/ssh_keys:ro
@@ -36,6 +37,9 @@ services:
    - MYSQL_USER
    - MYSQL_PASSWORD
    - MYSQL_ROOT_PASSWORD
+#   - client-key.pem
+#   - client-cert.pem
+#   - root-ca.pem
   depends_on:
    - mysql-server
    - zabbix-java-gateway
@@ -58,13 +62,13 @@ services:
    - net.ipv4.conf.all.send_redirects=0
   labels:
    com.zabbix.description: "Zabbix server with MySQL database support"
-   com.zabbix.company: "Zabbix SIA"
+   com.zabbix.company: "Graphoun AI"
    com.zabbix.component: "zabbix-server"
    com.zabbix.dbtype: "mysql"
    com.zabbix.os: "ubuntu"
 
  zabbix-proxy-sqlite3:
-  image: zabbix/zabbix-proxy-sqlite3:ubuntu-latest
+  image: zabbix/zabbix-proxy-sqlite3:ubuntu-5.2-latest
   ports:
    - "10061:10051"
   volumes:
@@ -107,13 +111,13 @@ services:
   stop_grace_period: 30s
   labels:
    com.zabbix.description: "Zabbix proxy with SQLite3 database support"
-   com.zabbix.company: "Zabbix SIA"
+   com.zabbix.company: "Graphoun AI"
    com.zabbix.component: "zabbix-proxy"
    com.zabbix.dbtype: "sqlite3"
    com.zabbix.os: "ubuntu"
 
  zabbix-proxy-mysql:
-  image: zabbix/zabbix-proxy-mysql:ubuntu-latest
+  image: zabbix/zabbix-proxy-mysql:ubuntu-5.2-latest
   ports:
    - "10071:10051"
   volumes:
@@ -148,6 +152,13 @@ services:
    - mysql-server
    - zabbix-java-gateway
    - zabbix-snmptraps
+  secrets:
+   - MYSQL_USER
+   - MYSQL_PASSWORD
+   - MYSQL_ROOT_PASSWORD
+#   - client-key.pem
+#   - client-cert.pem
+#   - root-ca.pem
   networks:
    zbx_net_backend:
     aliases:
@@ -158,13 +169,13 @@ services:
   stop_grace_period: 30s
   labels:
    com.zabbix.description: "Zabbix proxy with MySQL database support"
-   com.zabbix.company: "Zabbix SIA"
+   com.zabbix.company: "Graphoun AI"
    com.zabbix.component: "zabbix-proxy"
    com.zabbix.dbtype: "mysql"
    com.zabbix.os: "ubuntu"
 
  zabbix-web-apache-mysql:
-  image: zabbix/zabbix-web-apache-mysql:ubuntu-latest
+  image: zabbix/zabbix-web-apache-mysql:ubuntu-5.2-latest
   ports:
    - "80:8080"
    - "443:8443"
@@ -174,6 +185,7 @@ services:
   volumes:
    - /etc/localtime:/etc/localtime:ro
    - ./zbx_env/etc/ssl/apache2:/etc/ssl/apache2:ro
+   - ./zbx_env/usr/share/zabbix/modules/:/usr/share/zabbix/modules/:ro
   deploy:
    resources:
     limits:
@@ -188,6 +200,9 @@ services:
   secrets:
    - MYSQL_USER
    - MYSQL_PASSWORD
+#   - client-key.pem
+#   - client-cert.pem
+#   - root-ca.pem
   depends_on:
    - mysql-server
    - zabbix-server
@@ -209,14 +224,14 @@ services:
    - net.core.somaxconn=65535
   labels:
    com.zabbix.description: "Zabbix frontend on Apache web-server with MySQL database support"
-   com.zabbix.company: "Zabbix SIA"
+   com.zabbix.company: "Graphoun AI"
    com.zabbix.component: "zabbix-frontend"
    com.zabbix.webserver: "apache2"
    com.zabbix.dbtype: "mysql"
    com.zabbix.os: "ubuntu"
 
  zabbix-web-nginx-mysql:
-  image: zabbix/zabbix-web-nginx-mysql:ubuntu-latest
+  image: zabbix/zabbix-web-nginx-mysql:ubuntu-5.2-latest
   ports:
    - "8081:8080"
    - "8443:8443"
@@ -226,6 +241,7 @@ services:
   volumes:
    - /etc/localtime:/etc/localtime:ro
    - ./zbx_env/etc/ssl/nginx:/etc/ssl/nginx:ro
+   - ./zbx_env/usr/share/zabbix/modules/:/usr/share/zabbix/modules/:ro
   deploy:
    resources:
     limits:
@@ -240,6 +256,9 @@ services:
   secrets:
    - MYSQL_USER
    - MYSQL_PASSWORD
+#   - client-key.pem
+#   - client-cert.pem
+#   - root-ca.pem
   depends_on:
    - mysql-server
    - zabbix-server
@@ -261,14 +280,14 @@ services:
    - net.core.somaxconn=65535
   labels:
    com.zabbix.description: "Zabbix frontend on Nginx web-server with MySQL database support"
-   com.zabbix.company: "Zabbix SIA"
+   com.zabbix.company: "Graphoun AI"
    com.zabbix.component: "zabbix-frontend"
    com.zabbix.webserver: "nginx"
    com.zabbix.dbtype: "mysql"
    com.zabbix.os: "ubuntu"
 
  zabbix-agent:
-  image: zabbix/zabbix-agent:ubuntu-latest
+  image: zabbix/zabbix-agent:ubuntu-5.2-latest
   ports:
    - "10050:10050"
   volumes:
@@ -301,12 +320,12 @@ services:
   stop_grace_period: 5s
   labels:
    com.zabbix.description: "Zabbix agent"
-   com.zabbix.company: "Zabbix SIA"
+   com.zabbix.company: "Graphoun AI"
    com.zabbix.component: "zabbix-agentd"
    com.zabbix.os: "ubuntu"
 
  zabbix-java-gateway:
-  image: zabbix/zabbix-java-gateway:ubuntu-latest
+  image: zabbix/zabbix-java-gateway:ubuntu-5.2-latest
   ports:
    - "10052:10052"
   deploy:
@@ -327,12 +346,12 @@ services:
   stop_grace_period: 5s
   labels:
    com.zabbix.description: "Zabbix Java Gateway"
-   com.zabbix.company: "Zabbix SIA"
+   com.zabbix.company: "Graphoun AI"
    com.zabbix.component: "java-gateway"
    com.zabbix.os: "ubuntu"
 
  zabbix-snmptraps:
-  image: zabbix/zabbix-snmptraps:ubuntu-latest
+  image: zabbix/zabbix-snmptraps:ubuntu-5.2-latest
   ports:
    - "162:1162/udp"
   volumes:
@@ -353,16 +372,21 @@ services:
   stop_grace_period: 5s
   labels:
    com.zabbix.description: "Zabbix snmptraps"
-   com.zabbix.company: "Zabbix SIA"
+   com.zabbix.company: "Graphoun AI"
    com.zabbix.component: "snmptraps"
    com.zabbix.os: "ubuntu"
 
  mysql-server:
-  image: mysql:5.7
+  image: mysql:8.0
   command:
    - mysqld
    - --character-set-server=utf8
    - --collation-server=utf8_bin
+   - --default-authentication-plugin=mysql_native_password
+#   - --require-secure-transport
+#   - --ssl-ca=/run/secrets/root-ca.pem
+#   - --ssl-cert=/run/secrets/server-cert.pem
+#   - --ssl-key=/run/secrets/server-key.pem
   volumes:
    - ./zbx_env/var/lib/mysql:/var/lib/mysql:rw
   env_file:
@@ -371,6 +395,9 @@ services:
    - MYSQL_USER
    - MYSQL_PASSWORD
    - MYSQL_ROOT_PASSWORD
+#   - server-key.pem
+#   - server-cert.pem
+#   - root-ca.pem
   stop_grace_period: 1m
   networks:
    zbx_net_backend:
@@ -383,6 +410,16 @@ services:
   image: busybox
   volumes:
    - ./zbx_env/var/lib/mysql:/var/lib/mysql:rw
+
+# elasticsearch:
+#  image: elasticsearch
+#  environment:
+#   - transport.host=0.0.0.0
+#   - discovery.zen.minimum_master_nodes=1
+#  networks:
+#   zbx_net_backend:
+#    aliases:
+#     - elasticsearch
 
 networks:
   zbx_net_frontend:
@@ -413,3 +450,13 @@ secrets:
     file: ./.MYSQL_PASSWORD
   MYSQL_ROOT_PASSWORD:
     file: ./.MYSQL_ROOT_PASSWORD
+#  client-key.pem:
+#    file: ./.ZBX_DB_KEY_FILE
+#  client-cert.pem:
+#    file: ./.ZBX_DB_CERT_FILE
+#  root-ca.pem:
+#    file: ./.ZBX_DB_CA_FILE
+#  server-cert.pem:
+#    file: ./.DB_CERT_FILE
+#  server-key.pem:
+#    file: ./.DB_KEY_FILE

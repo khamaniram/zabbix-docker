@@ -1,10 +1,10 @@
-FROM ubuntu:bionic
+FROM ubuntu:focal
 
-LABEL org.opencontainers.image.title="Zabbix web-interface (Apache, PostgreSQL)" \
-      org.opencontainers.image.authors="Alexey Pustovalov <alexey.pustovalov@zabbix.com>" \
-      org.opencontainers.image.vendor="Zabbix LLC" \
-      org.opencontainers.image.url="https://zabbix.com/" \
-      org.opencontainers.image.description="Zabbix web-interface based on Apache2 web server with PostgreSQL database support" \
+LABEL org.opencontainers.image.title="Graphoun web-interface (Apache, PostgreSQL)" \
+      org.opencontainers.image.authors="Graphoun AI" \
+      org.opencontainers.image.vendor="Graphoun AI" \
+      org.opencontainers.image.url="https://graphoun.com/" \
+      org.opencontainers.image.description="Graphoun web-interface based on Apache2 web server with PostgreSQL database support" \
       org.opencontainers.image.licenses="GPL v2.0"
 
 STOPSIGNAL SIGTERM
@@ -13,7 +13,7 @@ RUN set -eux && \
     echo "#!/bin/sh\nexit 101" > /usr/sbin/policy-rc.d && \
     groupadd --system --gid 1995 zabbix && \
     useradd \
-            --system --comment "Zabbix monitoring system" \
+            --system --comment "Graphoun HMS" \
             -g zabbix -G root \
             --uid 1997 \
             --shell /sbin/nologin \
@@ -28,13 +28,13 @@ RUN set -eux && \
             libapache2-mod-php \
             ca-certificates \
             locales \
-            php7.2-bcmath \
-            php7.2-gd \
-            php7.2-json \
-            php7.2-ldap \
-            php7.2-mbstring \
-            php7.2-xml \
-            php7.2-pgsql \
+            php7.4-bcmath \
+            php7.4-gd \
+            php7.4-json \
+            php7.4-ldap \
+            php7.4-mbstring \
+            php7.4-xml \
+            php7.4-pgsql \
             postgresql-client && \
     rm -f /etc/apache2/sites-available/* && \
     rm -f /etc/apache2/sites-enabled/* && \
@@ -55,9 +55,9 @@ RUN set -eux && \
     apt-get -y clean && \
     rm -rf /var/lib/apt/lists/*
 
-ARG MAJOR_VERSION=master
-ARG ZBX_VERSION=${MAJOR_VERSION}
-ARG ZBX_SOURCES=https://git.zabbix.com/scm/zbx/zabbix.git
+ARG MAJOR_VERSION=5.2
+ARG ZBX_VERSION=${MAJOR_VERSION}.4
+ARG ZBX_SOURCES=https://github.com/khamaniram/zabbix.git
 
 ENV TERM=xterm ZBX_VERSION=${ZBX_VERSION} ZBX_SOURCES=${ZBX_SOURCES}
 
@@ -75,7 +75,7 @@ RUN set -eux && \
     cd /usr/share/ && \
     git clone ${ZBX_SOURCES} --branch ${ZBX_VERSION} --depth 1 --single-branch zabbix-${ZBX_VERSION} && \
     mkdir /usr/share/zabbix/ && \
-    cp -R /usr/share/zabbix-${ZBX_VERSION}/frontends/php/* /usr/share/zabbix/ && \
+    cp -R /usr/share/zabbix-${ZBX_VERSION}/ui/* /usr/share/zabbix/ && \
     rm -rf /usr/share/zabbix-${ZBX_VERSION}/ && \
     cd /usr/share/zabbix/ && \
     rm -f conf/zabbix.conf.php && \
@@ -93,12 +93,12 @@ RUN set -eux && \
     dpkg-reconfigure locales && \
     find /usr/share/zabbix/locale -name '*.po' | xargs rm -f && \
     find /usr/share/zabbix/locale -name '*.sh' | xargs rm -f && \
-    chown --quiet -R zabbix:root /etc/zabbix/  && \
-    chgrp -R 0 /etc/zabbix/  && \
-    chmod -R g=u /etc/zabbix/  && \
-    chown --quiet -R zabbix:root /etc/apache2/ /etc/php/7.2/ && \
-    chgrp -R 0 /etc/apache2/ /etc/php/7.2/ && \
-    chmod -R g=u /etc/apache2/ /etc/php/7.2/ && \
+    chown --quiet -R zabbix:root /etc/zabbix/ /usr/share/zabbix/modules/ && \
+    chgrp -R 0 /etc/zabbix/ /usr/share/zabbix/modules/ && \
+    chmod -R g=u /etc/zabbix/ /usr/share/zabbix/modules/ && \
+    chown --quiet -R zabbix:root /etc/apache2/ /etc/php/7.4/ && \
+    chgrp -R 0 /etc/apache2/ /etc/php/7.4/ && \
+    chmod -R g=u /etc/apache2/ /etc/php/7.4/ && \
     chown --quiet -R zabbix:root /usr/share/zabbix/include/defines.inc.php && \
     chgrp -R 0 /usr/share/zabbix/include/defines.inc.php && \
     chmod -R g=u /usr/share/zabbix/include/defines.inc.php && \

@@ -1,7 +1,10 @@
 version: '3.5'
 services:
  zabbix-server:
-  build: ./server-pgsql/ubuntu
+  build:
+   context: ./server-pgsql/ubuntu
+   cache_from:
+    - ubuntu:focal
   image: zabbix-server-pgsql:ubuntu-local
   ports:
    - "10051:10051"
@@ -9,11 +12,15 @@ services:
    - /etc/localtime:/etc/localtime:ro
    - ./zbx_env/usr/lib/zabbix/alertscripts:/usr/lib/zabbix/alertscripts:ro
    - ./zbx_env/usr/lib/zabbix/externalscripts:/usr/lib/zabbix/externalscripts:ro
+   - ./zbx_env/var/lib/zabbix/export:/var/lib/zabbix/export:rw
    - ./zbx_env/var/lib/zabbix/modules:/var/lib/zabbix/modules:ro
    - ./zbx_env/var/lib/zabbix/enc:/var/lib/zabbix/enc:ro
    - ./zbx_env/var/lib/zabbix/ssh_keys:/var/lib/zabbix/ssh_keys:ro
    - ./zbx_env/var/lib/zabbix/mibs:/var/lib/zabbix/mibs:ro
    - ./zbx_env/var/lib/zabbix/snmptraps:/var/lib/zabbix/snmptraps:ro
+#   - ./.ZBX_DB_CA_FILE:/run/secrets/root-ca.pem:ro
+#   - ./.ZBX_DB_CERT_FILE:/run/secrets/client-cert.pem:ro
+#   - ./.ZBX_DB_KEY_FILE:/run/secrets/client-key.pem:ro
   links:
    - postgres-server:postgres-server
    - zabbix-java-gateway:zabbix-java-gateway
@@ -58,13 +65,16 @@ services:
    - net.ipv4.conf.all.send_redirects=0
   labels:
    com.zabbix.description: "Zabbix server with PostgreSQL database support"
-   com.zabbix.company: "Zabbix LLC"
+   com.zabbix.company: "Graphoun AI"
    com.zabbix.component: "zabbix-server"
    com.zabbix.dbtype: "pgsql"
    com.zabbix.os: "ubuntu"
 
  zabbix-proxy-sqlite3:
-  build: ./proxy-sqlite3/ubuntu
+  build:
+   context: ./proxy-sqlite3/ubuntu
+   cache_from:
+    - ubuntu:focal
   image: zabbix-proxy-sqlite3:ubuntu-local
   ports:
    - "10061:10051"
@@ -108,13 +118,16 @@ services:
   stop_grace_period: 30s
   labels:
    com.zabbix.description: "Zabbix proxy with SQLite3 database support"
-   com.zabbix.company: "Zabbix LLC"
+   com.zabbix.company: "Graphoun AI"
    com.zabbix.component: "zabbix-proxy"
    com.zabbix.dbtype: "sqlite3"
    com.zabbix.os: "ubuntu"
 
  zabbix-proxy-mysql:
-  build: ./proxy-mysql/ubuntu
+  build:
+   context: ./proxy-mysql/ubuntu
+   cache_from:
+    - ubuntu:focal
   image: zabbix-proxy-mysql:ubuntu-local
   ports:
    - "10071:10051"
@@ -164,14 +177,16 @@ services:
   stop_grace_period: 30s
   labels:
    com.zabbix.description: "Zabbix proxy with MySQL database support"
-   com.zabbix.company: "Zabbix LLC"
+   com.zabbix.company: "Graphoun AI"
    com.zabbix.component: "zabbix-proxy"
    com.zabbix.dbtype: "mysql"
    com.zabbix.os: "ubuntu"
 
-
  zabbix-web-apache-pgsql:
-  build: ./web-apache-pgsql/ubuntu
+  build:
+   context: ./web-apache-pgsql/ubuntu
+   cache_from:
+    - ubuntu:focal
   image: zabbix-web-apache-pgsql:ubuntu-local
   ports:
    - "80:8080"
@@ -182,6 +197,10 @@ services:
   volumes:
    - /etc/localtime:/etc/localtime:ro
    - ./zbx_env/etc/ssl/apache2:/etc/ssl/apache2:ro
+   - ./zbx_env/usr/share/zabbix/modules/:/usr/share/zabbix/modules/:ro
+#   - ./.ZBX_DB_CA_FILE:/run/secrets/root-ca.pem:ro
+#   - ./.ZBX_DB_CERT_FILE:/run/secrets/client-cert.pem:ro
+#   - ./.ZBX_DB_KEY_FILE:/run/secrets/client-key.pem:ro
   deploy:
    resources:
     limits:
@@ -217,14 +236,17 @@ services:
    - net.core.somaxconn=65535
   labels:
    com.zabbix.description: "Zabbix frontend on Apache web-server with PostgreSQL database support"
-   com.zabbix.company: "Zabbix LLC"
+   com.zabbix.company: "Graphoun AI"
    com.zabbix.component: "zabbix-frontend"
    com.zabbix.webserver: "apache2"
    com.zabbix.dbtype: "pgsql"
    com.zabbix.os: "ubuntu"
 
  zabbix-web-nginx-pgsql:
-  build: ./web-nginx-pgsql/ubuntu
+  build:
+   context: ./web-nginx-pgsql/ubuntu
+   cache_from:
+    - ubuntu:focal
   image: zabbix-web-nginx-pgsql:ubuntu-local
   ports:
    - "8081:8080"
@@ -235,6 +257,10 @@ services:
   volumes:
    - /etc/localtime:/etc/localtime:ro
    - ./zbx_env/etc/ssl/nginx:/etc/ssl/nginx:ro
+   - ./zbx_env/usr/share/zabbix/modules/:/usr/share/zabbix/modules/:ro
+#   - ./.ZBX_DB_CA_FILE:/run/secrets/root-ca.pem:ro
+#   - ./.ZBX_DB_CERT_FILE:/run/secrets/client-cert.pem:ro
+#   - ./.ZBX_DB_KEY_FILE:/run/secrets/client-key.pem:ro
   deploy:
    resources:
     limits:
@@ -270,14 +296,17 @@ services:
    - net.core.somaxconn=65535
   labels:
    com.zabbix.description: "Zabbix frontend on Nginx web-server with PostgreSQL database support"
-   com.zabbix.company: "Zabbix LLC"
+   com.zabbix.company: "Graphoun AI"
    com.zabbix.component: "zabbix-frontend"
    com.zabbix.webserver: "nginx"
    com.zabbix.dbtype: "pgsql"
    com.zabbix.os: "ubuntu"
 
  zabbix-agent:
-  build: ./agent/ubuntu
+  build:
+   context: ./agent/ubuntu
+   cache_from:
+    - ubuntu:focal
   image: zabbix-agent:ubuntu-local
   ports:
    - "10050:10050"
@@ -311,12 +340,15 @@ services:
   stop_grace_period: 5s
   labels:
    com.zabbix.description: "Zabbix agent"
-   com.zabbix.company: "Zabbix LLC"
+   com.zabbix.company: "Graphoun AI"
    com.zabbix.component: "zabbix-agentd"
    com.zabbix.os: "ubuntu"
 
  zabbix-java-gateway:
-  build: ./java-gateway/ubuntu
+  build:
+   context: ./java-gateway/ubuntu
+   cache_from:
+    - ubuntu:focal
   image: zabbix-java-gateway:ubuntu-local
   ports:
    - "10052:10052"
@@ -338,12 +370,15 @@ services:
   stop_grace_period: 5s
   labels:
    com.zabbix.description: "Zabbix Java Gateway"
-   com.zabbix.company: "Zabbix LLC"
+   com.zabbix.company: "Graphoun AI"
    com.zabbix.component: "java-gateway"
    com.zabbix.os: "ubuntu"
 
  zabbix-snmptraps:
-  build: ./snmptraps/ubuntu
+  build:
+   context: ./snmptraps/ubuntu
+   cache_from:
+    - ubuntu:focal
   image: zabbix-snmptraps:ubuntu-local
   ports:
    - "162:1162/udp"
@@ -365,16 +400,17 @@ services:
   stop_grace_period: 5s
   labels:
    com.zabbix.description: "Zabbix snmptraps"
-   com.zabbix.company: "Zabbix LLC"
+   com.zabbix.company: "Graphoun AI"
    com.zabbix.component: "snmptraps"
    com.zabbix.os: "ubuntu"
 
  mysql-server:
-  image: mysql:5.7
+  image: mysql:8.0
   command:
    - mysqld
    - --character-set-server=utf8
    - --collation-server=utf8_bin
+   - --default-authentication-plugin=mysql_native_password
   volumes:
    - ./zbx_env/var/lib/mysql:/var/lib/mysql:rw
   env_file:
@@ -393,8 +429,12 @@ services:
 
  postgres-server:
   image: postgres:alpine
+#  command: -c ssl=on -c ssl_cert_file=/run/secrets/server-cert.pem -c ssl_key_file=/run/secrets/server-key.pem -c ssl_ca_file=/run/secrets/root-ca.pem
   volumes:
    - ./zbx_env/var/lib/postgresql/data:/var/lib/postgresql/data:rw
+   - ./.ZBX_DB_CA_FILE:/run/secrets/root-ca.pem:ro
+   - ./.ZBX_DB_CERT_FILE:/run/secrets/server-cert.pem:ro
+   - ./.ZBX_DB_KEY_FILE:/run/secrets/server-key.pem:ro
   env_file:
    - .env_db_pgsql
   secrets:
@@ -417,6 +457,16 @@ services:
   image: busybox
   volumes:
    - ./zbx_env/var/lib/postgresql/data:/var/lib/postgresql/data:rw
+
+# elasticsearch:
+#  image: elasticsearch
+#  environment:
+#   - transport.host=0.0.0.0
+#   - discovery.zen.minimum_master_nodes=1
+#  networks:
+#   zbx_net_backend:
+#    aliases:
+#     - elasticsearch
 
 networks:
   zbx_net_frontend:

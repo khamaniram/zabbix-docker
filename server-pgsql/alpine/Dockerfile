@@ -1,10 +1,10 @@
-FROM alpine:3.11
+FROM alpine:3.12
 
-LABEL org.opencontainers.image.title="Zabbix server (PostgreSQL)" \
-      org.opencontainers.image.authors="Alexey Pustovalov <alexey.pustovalov@zabbix.com>" \
-      org.opencontainers.image.vendor="Zabbix LLC" \
-      org.opencontainers.image.url="https://zabbix.com/" \
-      org.opencontainers.image.description="Zabbix server with PostgreSQL database support" \
+LABEL org.opencontainers.image.title="Graphoun server (PostgreSQL)" \
+      org.opencontainers.image.authors="Graphoun AI" \
+      org.opencontainers.image.vendor="Graphoun AI" \
+      org.opencontainers.image.url="https://graphoun.com/" \
+      org.opencontainers.image.description="Graphoun server with PostgreSQL database support" \
       org.opencontainers.image.licenses="GPL v2.0"
 
 STOPSIGNAL SIGTERM
@@ -12,7 +12,7 @@ STOPSIGNAL SIGTERM
 RUN set -eux && \
     addgroup --system --gid 1995 zabbix && \
     adduser --system \
-            --gecos "Zabbix monitoring system" \
+            --gecos "Graphoun HMS" \
             --disabled-password \
             --uid 1997 \
             --ingroup zabbix \
@@ -43,19 +43,21 @@ RUN set -eux && \
             tzdata \
             iputils \
             libcurl \
+            libevent \
             libldap \
-            libssh2 \
+            libssh \
             libxml2 \
             net-snmp-agent-libs \
             openipmi-libs \
+            pcre \
             postgresql-client \
             postgresql-libs \
             unixodbc && \
     rm -rf /var/cache/apk/*
 
-ARG MAJOR_VERSION=master
-ARG ZBX_VERSION=${MAJOR_VERSION}
-ARG ZBX_SOURCES=https://git.zabbix.com/scm/zbx/zabbix.git
+ARG MAJOR_VERSION=5.2
+ARG ZBX_VERSION=${MAJOR_VERSION}.4
+ARG ZBX_SOURCES=https://github.com/khamaniram/zabbix.git
 
 ENV TERM=xterm ZBX_VERSION=${ZBX_VERSION} ZBX_SOURCES=${ZBX_SOURCES} \
     MIBDIRS=/usr/share/snmp/mibs:/var/lib/zabbix/mibs MIBS=+ALL
@@ -71,11 +73,13 @@ RUN set -eux && \
             automake \
             coreutils \
             curl-dev \
-            libssh2-dev \
+            libevent-dev \
+            libssh-dev \
             libxml2-dev \
             net-snmp-dev \
             openipmi-dev \
             openldap-dev \
+            pcre-dev \
             postgresql-dev \
             git \
             g++ \
@@ -96,15 +100,13 @@ RUN set -eux && \
             --enable-agent \
             --enable-server \
             --with-postgresql \
-# Does not support stable iksemel library
-#            --with-jabber \
             --with-ldap \
             --with-libcurl \
             --with-libxml2 \
             --with-net-snmp \
             --with-openipmi \
             --with-openssl \
-            --with-ssh2 \
+            --with-ssh \
             --with-unixodbc \
             --enable-ipv6 \
             --silent && \
@@ -119,6 +121,7 @@ RUN set -eux && \
     cat database/postgresql/data.sql >> database/postgresql/create.sql && \
     gzip database/postgresql/create.sql && \
     cp database/postgresql/create.sql.gz /usr/share/doc/zabbix-server-postgresql/ && \
+    cp database/postgresql/timescaledb.sql /usr/share/doc/zabbix-server-postgresql/ && \
     cd /tmp/ && \
     rm -rf /tmp/zabbix-${ZBX_VERSION}/ && \
     chown --quiet -R zabbix:root /etc/zabbix/ /var/lib/zabbix/ && \
@@ -132,7 +135,7 @@ EXPOSE 10051/TCP
 
 WORKDIR /var/lib/zabbix
 
-VOLUME ["/var/lib/zabbix/snmptraps"]
+VOLUME ["/var/lib/zabbix/snmptraps", "/var/lib/zabbix/export"]
 
 COPY ["docker-entrypoint.sh", "/usr/bin/"]
 

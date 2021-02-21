@@ -20,14 +20,14 @@ jobs:
         build:
           - agent
           - agent2
-          - java-gateway                                                                       
-          - proxy-mysql                                                                        
-          - proxy-sqlite3                                                                      
-          - server-mysql                                                                       
-          - server-pgsql                                                                       
-          - snmptraps                                                                          
-          - web-apache-mysql                                                                   
-          - web-apache-pgsql                                                                   
+          - java-gateway
+          - proxy-mysql
+          - proxy-sqlite3
+          - server-mysql
+          - server-pgsql
+          - snmptraps
+          - web-apache-mysql
+          - web-apache-pgsql
           - web-nginx-mysql
           - web-nginx-pgsql
     steps:
