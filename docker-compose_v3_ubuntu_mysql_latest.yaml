@@ -175,7 +175,7 @@ services:
    com.zabbix.os: "ubuntu"
 
  zabbix-web-apache-mysql:
-  image: zabbix/zabbix-web-apache-mysql:ubuntu-5.2-latest
+  image: khamani/graphoun-web-apache-mysql:ubuntu-5.2-latest
   ports:
    - "80:8080"
    - "443:8443"
@@ -353,7 +353,7 @@ services:
  zabbix-snmptraps:
   image: zabbix/zabbix-snmptraps:ubuntu-5.2-latest
   ports:
-   - "162:1162/udp"
+   - "1162:1162/udp"
   volumes:
    - snmptraps:/var/lib/zabbix/snmptraps:rw
   deploy:

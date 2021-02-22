@@ -178,7 +178,7 @@ services:
    com.zabbix.os: "alpine"
 
  zabbix-web-apache-mysql:
-  image: zabbix/zabbix-web-apache-mysql:alpine-5.2-latest
+  image: khamani/zabbix-web-apache-mysql:alpine-5.2-latest
   ports:
    - "80:8080"
    - "443:8443"
